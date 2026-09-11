@@ -1,0 +1,703 @@
+# OpenScience Dispatcher · 科研综合调度技能
+
+> 把 [OpenScience](https://github.com/synthetic-sciences/openscience) 的 **312 个科研子技能**与
+> **6 个 MCP 连接器**，装进 WorkBuddy 等通用 AI Agent 平台。
+> 子技能是「能力」，MCP 是「工具」，调度器负责把它们路由到你的问题上去。
+
+[中文](#中文) · [English](#english)
+
+<div align="center">
+
+`312` Skills · `16` Categories · `6` MCP Connectors · Apache-2.0 · Python 3.8+ · 零依赖
+
+</div>
+
+---
+
+<a id="中文"></a>
+
+## 中文
+
+<a id="困境"></a>
+
+### 一、当代本科生与硕士生，到底卡在哪里
+
+科研训练里最难的部分，从来不是「不知道某个知识点」，而是**没有人系统教过你研究方法本身**。
+课程给你知识地图，却不给你做研究的手艺。于是绝大多数人是在一次次踩坑里自学，而这些坑高度重复：
+
+| 困境 | 具体表现 |
+|---|---|
+| **方法学断层** | 实验设计（对照、随机化、样本量、混杂因素）、统计检验的选择、多重比较校正、效应量与置信区间——几乎全靠自学，选错检验是常态 |
+| **工具链碎片化** | 一个课题要同时碰 Python/R、测序流程、分子对接、统计建模、绘图、LaTeX、文献管理、数据库 API。每样工具的安装与语法都要重新学一遍 |
+| **「最后一公里」** | 明明知道 UniProt / PDB / ChEMBL / GEO 里有数据，却卡在不会写 API 调用；明明知道 Scanpy / GROMACS 能算，却卡在环境装不上 |
+| **算力与成本** | 想跑个模型却没有 GPU；云平台不熟、怕误开资源烧钱，于是很多想法在「跑不动」这一步就停了 |
+| **论文从零到一** | 结构怎么搭、图表怎么规范、目标期刊什么模板、cover letter 怎么写、审稿意见怎么回——全靠摸索，且没人给反馈 |
+| **时间被撕裂** | 课业 + 组会 + 实验 + 考研/申博 + 实习，留给「补方法」的整块时间极少 |
+| **AI 用不对反而有害** | 大模型能生成看似专业的段落与代码，但缺少方法学约束时，会产出「格式正确、结论错误」的内容，比不会更危险 |
+
+一句话：**科研的门槛不在智力，在于没人把「方法 + 工具 + 数据 + 算力」串成一条能走通的路。**
+
+<a id="能做什么"></a>
+
+### 二、这个项目能帮你做什么
+
+它把 OpenScience 沉淀的科研方法论与工具链，变成你 Agent 里随时可调的能力。按典型场景：
+
+**1. 从零开始写一篇论文**
+从选题、文献综述、方法、结果到讨论，全部有对应子技能：
+`scientific-writing`（段落级写作规范）、`literature-review`（含 PRISMA 系统综述）、
+`citation-management`（Google Scholar / PubMed 检索与引文抽取）、`ml-paper-writing`、
+`venue-templates`（各会议/期刊 LaTeX 模板与投稿要求）、`latex-posters`、`pptx-posters`、
+`scientific-slides`、`paper-2-web`（论文转网页/海报/视频）。
+
+**2. 设计实验与分析数据**
+`statistical-analysis`（检验选择与报告）、`pymc-bayesian-modeling`（贝叶斯建模）、
+`scikit-survival`（生存分析）、`statsmodels`、`shap`（可解释性）、`exploratory-data-analysis`、
+`pymoo`（多目标优化）、`simpy`（离散事件仿真）。
+
+**3. 文献调研、选题与自我审查**
+`research-lookup` / `perplexity-search`（实时联网检索）、`hypothesis-generation`（假设生成）、
+`scientific-problem-selection`（选题与项目构思）、`scientific-critical-thinking`（批判性评估）、
+`peer-review` / `review` / `verify` / `reproduce` / `sources`（结论核查、复现与来源审计）。
+
+**4. 干湿实验的衔接**
+`molecular-cloning`（克隆设计与 PCR 预测）、`opentrons-integration` / `pylabrobot`（液体处理自动化）、
+`flow-cytometry-analysis`、`protocolsio-integration`、`pydicom` / `clinical-imaging`（医学影像）、
+`pathml` / `histolab`（病理切片）、`immunology-assays`、`pharmacology-wetlab`。
+
+**5. 计算、建模与组学分析**
+`scanpy` / `anndata` / `scvi-tools`（单细胞）、`pydeseq2`（差异表达）、`biopython` / `pysam` / `deeptools`（序列与 NGS）、
+`rdkit` / `datamol` / `deepchem` / `diffdock` / `admet-prediction`（化学与药物发现）、
+`pymatgen`（材料）、`astropy`（天文）、`neural-operator` / `pinn-training`（科学机器学习）、
+`qiskit` / `cirq` / `pennylane` / `qutip`（量子计算）。
+
+**6. 大模型训练与推理**
+`transformers` / `peft` / `trl` / `unsloth-fine-tuning` / `axolotl` / `llama-factory`（微调）、
+`deepspeed` / `pytorch-lightning` / `ray-train`（分布式训练）、`serving-llms-vllm` / `sglang` /
+`llama-cpp` / `tensorrt-llm`（推理部署）、`mlflow` / `weights-and-biases`（实验追踪）。
+
+**7. 借算力，也管住成本**
+`cloud-compute` 分类下的 `skypilot-multi-cloud-orchestration`、`modal-serverless-gpu`、
+`runpod-gpu-cloud`、`vast-ai-gpu-cloud`、`lambda-gpu-cloud`、`tinker-fine-tuning` 等，
+配合 MCP 连接器直接操作云上 GPU。
+
+**8. 让结果可复现、可交付**
+`iso-13485-certification`（医疗器械质量体系文档）、`research-grants`（基金申请书）、
+`market-research-reports`、`get-available-resources`（先探测本机算力再决定方案）。
+
+**怎么用**：直接用自然语言提问即可，调度器会检索命中的子技能并载入其正文；需要真的动手时，再按需安装 MCP。
+
+```bash
+dispatch.cmd query "单细胞 降维 聚类"      # 检索能力
+dispatch.cmd load scanpy                 # 载入该子技能的完整方法论
+dispatch.cmd mcp install github          # 生成 MCP 安装方案（默认只看不写）
+```
+
+<a id="规模"></a>
+
+### 三、规模：312 个开源 skill + 6 个 MCP
+
+全部内容来自 OpenScience 的源码树，按 **16 个分类**组织：
+
+| 分类 | 目录 | 数量 |
+|---|---|---:|
+| 模型训练 | `ml-training` | 52 |
+| 生物学 | `biology` | 44 |
+| 科学数据库 | `databases` | 32 |
+| 大模型工具 | `llm-tools` | 31 |
+| 化学 | `chemistry` | 23 |
+| 物理学 | `physics` | 23 |
+| 科学计算 | `coding` | 20 |
+| 科研流程 | `research` | 18 |
+| 会话与工程 | `other` | 16 |
+| 云端算力 | `cloud-compute` | 11 |
+| 数据工程 | `data-engineering` | 10 |
+| 论文写作 | `writing` | 10 |
+| 模型推理 | `ml-inference` | 9 |
+| 科学可视化 | `visualization` | 8 |
+| 量子计算 | `quantum` | 4 |
+| 文档解析 | `document-parsing` | 1 |
+| **合计** | | **312** |
+
+其中 243 个技能依托具体的开源项目（如 Scanpy、RDKit、vLLM、Qiskit），
+69 个是 OpenScience 原创的科研方法论与工作流技能。
+
+> 说明：README 上游写作「309 个内置 skills」，本清单以**源码实测**为准，实为 312 个含 `SKILL.md` 的技能目录。
+
+<a id="inventory"></a>
+
+### 四、全部清单（含源仓库链接）
+
+#### 4.1 Skill（312 个）
+
+| # | 技能 | 分类 | 用途 | 源仓库 |
+|---:|---|---|---|---|
+| 1 | `adaptyv` | 模型训练 | Cloud laboratory platform for automated protein testing and… | [Adaptyv Bio](https://www.adaptyvbio.com/) |
+| 2 | `awq-quantization` | 模型训练 | Activation-aware weight quantization for 4-bit LLM compression… | [LLM Compressor (AWQ)](https://github.com/vllm-project/llm-compressor) |
+| 3 | `axolotl` | 模型训练 | Expert guidance for fine-tuning LLMs with Axolotl - YAML… | [Axolotl](https://github.com/axolotl-ai-cloud/axolotl) |
+| 4 | `colab-finetuning` | 模型训练 | Fine-tune LLMs on Google Colab GPUs directly from openscience. | [Google Colab](https://colab.research.google.com/) |
+| 5 | `deepspeed` | 模型训练 | Expert guidance for distributed training with DeepSpeed - ZeRO… | [DeepSpeed](https://github.com/deepspeedai/DeepSpeed) |
+| 6 | `distributed-llm-pretraining-torchtitan` | 模型训练 | Provides PyTorch-native distributed LLM pretraining using… | [TorchTitan](https://github.com/pytorch/torchtitan) |
+| 7 | `evaluating-code-models` | 模型训练 | Evaluates code generation models across HumanEval, MBPP,… | [BigCode Evaluation Harness](https://github.com/bigcode-project/bigcode-evaluation-harness) |
+| 8 | `evaluating-llms-harness` | 模型训练 | Evaluates LLMs across 60+ academic benchmarks (MMLU, HumanEval,… | [LM Evaluation Harness](https://github.com/EleutherAI/lm-evaluation-harness) |
+| 9 | `fine-tuning-with-trl` | 模型训练 | Fine-tune LLMs using reinforcement learning with TRL - SFT for… | [TRL](https://github.com/huggingface/trl) |
+| 10 | `geniml` | 模型训练 | When working with genomic interval data (BED files) for machine… | [Geniml](https://github.com/databio/geniml) |
+| 11 | `gptq` | 模型训练 | Post-training 4-bit quantization for LLMs with minimal accuracy… | [AutoGPTQ](https://github.com/AutoGPTQ/AutoGPTQ) |
+| 12 | `grpo-rl-training` | 模型训练 | Expert guidance for GRPO/RL fine-tuning with TRL for reasoning… | [Open R1](https://github.com/huggingface/open-r1) |
+| 13 | `hqq-quantization` | 模型训练 | Half-Quadratic Quantization for LLMs without calibration data. | [HQQ](https://github.com/mobiusml/hqq) |
+| 14 | `hugging-face-evaluation` | 模型训练 | Add and manage evaluation results in Hugging Face model cards. | [LightEval](https://github.com/huggingface/lighteval) |
+| 15 | `hugging-face-model-trainer` | 模型训练 | When users want to train or fine-tune language models using TRL… | [TRL](https://github.com/huggingface/trl) |
+| 16 | `huggingface-accelerate` | 模型训练 | Simplest distributed training API. | [Accelerate](https://github.com/huggingface/accelerate) |
+| 17 | `implementing-llms-litgpt` | 模型训练 | Implements and trains LLMs using Lightning AI's LitGPT with 20+… | [LitGPT](https://github.com/Lightning-AI/litgpt) |
+| 18 | `knowledge-distillation` | 模型训练 | Compress large language models using knowledge distillation… | [Microsoft LMOps](https://github.com/microsoft/LMOps) |
+| 19 | `llama-factory` | 模型训练 | Expert guidance for fine-tuning LLMs with LLaMA-Factory - WebUI… | [LLaMA-Factory](https://github.com/hiyouga/LLaMA-Factory) |
+| 20 | `mamba-architecture` | 模型训练 | State-space model with O(n) complexity vs Transformers' O(n²). | [Mamba](https://github.com/state-spaces/mamba) |
+| 21 | `ml-benchmark-evaluation` | 模型训练 | Rigorous methodology for evaluating ML models on established… | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/ml-training/ml-benchmark-evaluation) |
+| 22 | `mlflow` | 模型训练 | Track ML experiments, manage model registry with versioning,… | [MLflow](https://github.com/mlflow/mlflow) |
+| 23 | `model-economics` | 模型训练 | Cost modeling and ROI analysis for specialized LLM development. | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/ml-training/model-economics) |
+| 24 | `model-merging` | 模型训练 | Merge multiple fine-tuned models using mergekit to combine… | [MergeKit](https://github.com/arcee-ai/mergekit) |
+| 25 | `model-pruning` | 模型训练 | Reduce LLM size and accelerate inference using pruning… | [Wanda](https://github.com/locuslab/wanda) |
+| 26 | `moe-training` | 模型训练 | Train Mixture of Experts (MoE) models using DeepSpeed or… | [Megatron-DeepSpeed](https://github.com/microsoft/Megatron-DeepSpeed) |
+| 27 | `nanogpt` | 模型训练 | Educational GPT implementation in ~300 lines. | [nanoGPT](https://github.com/karpathy/nanoGPT) |
+| 28 | `nemo-curator` | 模型训练 | GPU-accelerated data curation for LLM training. | [NeMo Curator](https://github.com/NVIDIA/NeMo-Curator) |
+| 29 | `nemo-evaluator-sdk` | 模型训练 | Evaluates LLMs across 100+ benchmarks from 18+ harnesses (MMLU,… | [NeMo Evaluator Launcher](https://pypi.org/project/nemo-evaluator-launcher/) |
+| 30 | `nnsight-remote-interpretability` | 模型训练 | Provides guidance for interpreting and manipulating neural… | [NNsight](https://github.com/ndif-team/nnsight) |
+| 31 | `openrlhf-training` | 模型训练 | High-performance RLHF framework with Ray+vLLM acceleration. | [OpenRLHF](https://github.com/OpenRLHF/OpenRLHF) |
+| 32 | `optimizing-attention-flash` | 模型训练 | Optimizes transformer attention with Flash Attention for 2-4x… | [FlashAttention](https://github.com/Dao-AILab/flash-attention) |
+| 33 | `peft-fine-tuning` | 模型训练 | Parameter-efficient fine-tuning for LLMs using LoRA, QLoRA, and… | [PEFT](https://github.com/huggingface/peft) |
+| 34 | `prime-intellect` | 模型训练 | Safely inspect Prime Intellect identity and plan compute or… | [Prime Intellect](https://github.com/PrimeIntellect-ai/prime) |
+| 35 | `pufferlib` | 模型训练 | High-performance reinforcement learning framework optimized for… | [PufferLib](https://github.com/PufferAI/PufferLib) |
+| 36 | `pytorch-fsdp` | 模型训练 | Expert guidance for Fully Sharded Data Parallel training with… | [PyTorch (FSDP)](https://github.com/pytorch/pytorch) |
+| 37 | `pytorch-lightning` | 模型训练 | High-level PyTorch framework with Trainer class, automatic… | [PyTorch Lightning](https://github.com/Lightning-AI/pytorch-lightning) |
+| 38 | `pyvene-interventions` | 模型训练 | Provides guidance for performing causal interventions on… | [pyvene](https://github.com/stanfordnlp/pyvene) |
+| 39 | `quantizing-models-bitsandbytes` | 模型训练 | Quantizes LLMs to 8-bit or 4-bit for 50-75% memory reduction… | [bitsandbytes](https://github.com/bitsandbytes-foundation/bitsandbytes) |
+| 40 | `ray-train` | 模型训练 | Distributed training orchestration across clusters. | [Ray](https://github.com/ray-project/ray) |
+| 41 | `rwkv-architecture` | 模型训练 | RNN+Transformer hybrid with O(n) inference. | [RWKV-LM](https://github.com/BlinkDL/RWKV-LM) |
+| 42 | `simpo-training` | 模型训练 | Simple Preference Optimization for LLM alignment. | [Alignment Handbook (SimPO)](https://github.com/huggingface/alignment-handbook) |
+| 43 | `sparse-autoencoder-training` | 模型训练 | Provides guidance for training and analyzing Sparse… | [SAELens](https://github.com/jbloomAus/SAELens) |
+| 44 | `stable-baselines3` | 模型训练 | Production-ready reinforcement learning algorithms (PPO, SAC,… | [Stable-Baselines3](https://github.com/DLR-RM/stable-baselines3) |
+| 45 | `tensorboard` | 模型训练 | Visualize training metrics, debug models with histograms,… | [TensorBoard](https://github.com/tensorflow/tensorboard) |
+| 46 | `torchforge-rl-training` | 模型训练 | Provides guidance for PyTorch-native agentic RL using… | [TorchForge](https://github.com/meta-pytorch/torchforge) |
+| 47 | `training-data-pipeline` | 模型训练 | Build training datasets for LLM specialization from production… | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/ml-training/training-data-pipeline) |
+| 48 | `training-llms-megatron` | 模型训练 | Trains large language models (2B-462B parameters) using NVIDIA… | [Megatron-LM](https://github.com/NVIDIA/Megatron-LM) |
+| 49 | `transformer-lens-interpretability` | 模型训练 | Provides guidance for mechanistic interpretability research… | [TransformerLens](https://github.com/TransformerLensOrg/TransformerLens) |
+| 50 | `unsloth-fine-tuning` | 模型训练 | Fast LLM fine-tuning with Unsloth - 2-5x faster training,… | [Unsloth](https://github.com/unslothai/unsloth) |
+| 51 | `verl-rl-training` | 模型训练 | Provides guidance for training LLMs with reinforcement learning… | [veRL](https://github.com/volcengine/verl) |
+| 52 | `weights-and-biases` | 模型训练 | Track ML experiments with automatic logging, visualize training… | [Weights & Biases](https://github.com/wandb/wandb) |
+| 53 | `anndata` | 生物学 | Data structure for annotated matrices in single-cell analysis. | [AnnData](https://github.com/scverse/anndata) |
+| 54 | `benchling-integration` | 生物学 | Benchling R&D platform integration. | [Benchling API](https://github.com/benchling) |
+| 55 | `bioimage-analysis` | 生物学 | Microscopy image analysis for cell biology. | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/biology/bioimage-analysis) |
+| 56 | `biopython` | 生物学 | Comprehensive molecular biology toolkit. | [Biopython](https://github.com/biopython/biopython) |
+| 57 | `bioservices` | 生物学 | Unified Python interface to 40+ bioinformatics services. | [BioServices](https://github.com/cokelaer/bioservices) |
+| 58 | `cancer-genomics-analysis` | 生物学 | Computational cancer genomics workflows. | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/biology/cancer-genomics-analysis) |
+| 59 | `clinical-decision-support` | 生物学 | Generate professional clinical decision support (CDS) documents… | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/biology/clinical-decision-support) |
+| 60 | `clinical-imaging` | 生物学 | Clinical and physiological imaging analysis. | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/biology/clinical-imaging) |
+| 61 | `clinical-reports` | 生物学 | Write comprehensive clinical reports including case reports… | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/biology/clinical-reports) |
+| 62 | `cobrapy` | 生物学 | Constraint-based metabolic modeling (COBRA). | [COBRApy](https://github.com/opencobra/cobrapy) |
+| 63 | `curated-bio-datasets` | 生物学 | Guide to accessing curated biological datasets for… | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/biology/curated-bio-datasets) |
+| 64 | `deeptools` | 生物学 | NGS analysis toolkit. | [deepTools](https://github.com/deeptools/deepTools) |
+| 65 | `dnanexus-integration` | 生物学 | DNAnexus cloud genomics platform. | [dx-toolkit](https://github.com/dnanexus/dx-toolkit) |
+| 66 | `esm` | 生物学 | Comprehensive toolkit for protein language models including… | [ESM](https://github.com/facebookresearch/esm) |
+| 67 | `etetoolkit` | 生物学 | Phylogenetic tree toolkit (ETE). | [ETE Toolkit](https://github.com/etetoolkit/ete) |
+| 68 | `flow-cytometry-analysis` | 生物学 | Complete flow cytometry analysis pipeline. | [FlowIO](https://github.com/whitews/FlowIO) |
+| 69 | `flowio` | 生物学 | Parse FCS (Flow Cytometry Standard) files v2.0-3.1. | [FlowIO](https://github.com/whitews/flowio) |
+| 70 | `gget` | 生物学 | Fast CLI/Python queries to 20+ bioinformatics databases. | [gget](https://github.com/pachterlab/gget) |
+| 71 | `glycobiology` | 生物学 | Glycosylation site prediction and glycobiology analysis. | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/biology/glycobiology) |
+| 72 | `histolab` | 生物学 | Lightweight WSI tile extraction and preprocessing. | [Histolab](https://github.com/histolab/histolab) |
+| 73 | `immunology-assays` | 生物学 | Computational analysis of immunology experimental data. | [MACS](https://github.com/macs3-project/MACS) |
+| 74 | `lamindb` | 生物学 | When working with LaminDB, an open-source data framework for… | [LaminDB](https://github.com/laminlabs/lamindb) |
+| 75 | `latchbio-integration` | 生物学 | Latch platform for bioinformatics workflows. | [Latch](https://github.com/latchbio/latch) |
+| 76 | `microbial-dynamics` | 生物学 | Microbial population dynamics modeling and analysis. | [Prokka](https://github.com/tseemann/prokka) |
+| 77 | `molecular-cloning` | 生物学 | Molecular cloning simulation and design. | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/biology/molecular-cloning) |
+| 78 | `neurokit2` | 生物学 | Comprehensive biosignal processing toolkit for analyzing… | [NeuroKit2](https://github.com/neuropsychology/NeuroKit) |
+| 79 | `neuropixels-analysis` | 生物学 | Neuropixels neural recording analysis. | [SpikeInterface](https://github.com/SpikeInterface/spikeinterface) |
+| 80 | `omero-integration` | 生物学 | Microscopy data management platform. | [OMERO.py](https://github.com/ome/omero-py) |
+| 81 | `opentrons-integration` | 生物学 | Official Opentrons Protocol API for OT-2 and Flex robots. | [Opentrons](https://github.com/Opentrons/opentrons) |
+| 82 | `pathml` | 生物学 | Full-featured computational pathology toolkit. | [PathML](https://github.com/Dana-Farber-AIOS/pathml) |
+| 83 | `pharmacology-wetlab` | 生物学 | Computational analysis of pharmacology wet-lab experiments. | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/biology/pharmacology-wetlab) |
+| 84 | `protein-binder-design` | 生物学 | Design and validate de novo protein binders with the current… | [NVIDIA BioNeMo](https://github.com/NVIDIA/bionemo-framework) |
+| 85 | `protocolsio-integration` | 生物学 | Integration with protocols.io API for managing scientific… | [protocols.io API](https://github.com/protocolsio) |
+| 86 | `pydeseq2` | 生物学 | Differential gene expression analysis (Python DESeq2). | [PyDESeq2](https://github.com/owkin/PyDESeq2) |
+| 87 | `pydicom` | 生物学 | Python library for working with DICOM (Digital Imaging and… | [pydicom](https://github.com/pydicom/pydicom) |
+| 88 | `pyhealth` | 生物学 | Comprehensive healthcare AI toolkit for developing, testing,… | [PyHealth](https://github.com/sunlabuiuc/PyHealth) |
+| 89 | `pylabrobot` | 生物学 | Vendor-agnostic lab automation framework. | [PyLabRobot](https://github.com/PyLabRobot/pylabrobot) |
+| 90 | `pysam` | 生物学 | Genomic file toolkit. | [pysam](https://github.com/pysam-developers/pysam) |
+| 91 | `scanpy` | 生物学 | Standard single-cell RNA-seq analysis pipeline. | [Scanpy](https://github.com/scverse/scanpy) |
+| 92 | `scikit-bio` | 生物学 | Biological data toolkit. | [scikit-bio](https://github.com/scikit-bio/scikit-bio) |
+| 93 | `scikit-survival` | 生物学 | Comprehensive toolkit for survival analysis and time-to-event… | [scikit-survival](https://github.com/sebp/scikit-survival) |
+| 94 | `scvi-tools` | 生物学 | Deep generative models for single-cell omics. | [scvi-tools](https://github.com/scverse/scvi-tools) |
+| 95 | `synthetic-biology` | 生物学 | Synthetic biology design and simulation tools. | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/biology/synthetic-biology) |
+| 96 | `treatment-plans` | 生物学 | Generate concise (3-4 page), focused medical treatment plans in… | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/biology/treatment-plans) |
+| 97 | `alphafold-database` | 科学数据库 | Access AlphaFold 200M+ AI-predicted protein structures. | [AlphaFold DB](https://alphafold.ebi.ac.uk/) |
+| 98 | `biorxiv-database` | 科学数据库 | Efficient database search tool for bioRxiv preprint server. | [bioRxiv](https://www.biorxiv.org/) |
+| 99 | `brenda-database` | 科学数据库 | Access BRENDA enzyme database via SOAP API. | [BRENDA](https://www.brenda-enzymes.org/) |
+| 100 | `cellxgene-census` | 科学数据库 | Query the CELLxGENE Census (61M+ cells) programmatically. | [CELLxGENE Census](https://github.com/chanzuckerberg/cellxgene-census) |
+| 101 | `chembl-database` | 科学数据库 | Query ChEMBL bioactive molecules and drug discovery data. | [ChEMBL](https://www.ebi.ac.uk/chembl/) |
+| 102 | `clinicaltrials-database` | 科学数据库 | Query ClinicalTrials.gov via API v2. | [ClinicalTrials.gov](https://clinicaltrials.gov/) |
+| 103 | `clinpgx-database` | 科学数据库 | Access ClinPGx pharmacogenomics data (successor to PharmGKB). | [ClinPGx](https://www.clinpgx.org/) |
+| 104 | `clinvar-database` | 科学数据库 | Query NCBI ClinVar for variant clinical significance. | [ClinVar](https://www.ncbi.nlm.nih.gov/clinvar/) |
+| 105 | `cosmic-database` | 科学数据库 | Access COSMIC cancer mutation database. | [COSMIC](https://cancer.sanger.ac.uk/cosmic) |
+| 106 | `datacommons-client` | 科学数据库 | Work with Data Commons, a platform providing programmatic… | [Data Commons](https://github.com/datacommonsorg/api-python) |
+| 107 | `drugbank-database` | 科学数据库 | Access and analyze comprehensive drug information from the… | [DrugBank](https://go.drugbank.com/) |
+| 108 | `ena-database` | 科学数据库 | Access European Nucleotide Archive via API/FTP. | [ENA](https://www.ebi.ac.uk/ena) |
+| 109 | `ensembl-database` | 科学数据库 | Query Ensembl genome database REST API for 250+ species. | [Ensembl](https://www.ensembl.org/) |
+| 110 | `fda-database` | 科学数据库 | Query openFDA API for drugs, devices, adverse events, recalls,… | [openFDA](https://open.fda.gov/) |
+| 111 | `fred-economic-data` | 科学数据库 | Query FRED (Federal Reserve Economic Data) API for 800,000+… | [FRED](https://fred.stlouisfed.org/) |
+| 112 | `gene-database` | 科学数据库 | Query NCBI Gene via E-utilities/Datasets API. | [NCBI Gene](https://www.ncbi.nlm.nih.gov/gene/) |
+| 113 | `geo-database` | 科学数据库 | Access NCBI GEO for gene expression/genomics data. | [NCBI GEO](https://www.ncbi.nlm.nih.gov/geo/) |
+| 114 | `gwas-database` | 科学数据库 | Query NHGRI-EBI GWAS Catalog for SNP-trait associations. | [GWAS Catalog](https://www.ebi.ac.uk/gwas/) |
+| 115 | `hmdb-database` | 科学数据库 | Access Human Metabolome Database (220K+ metabolites). | [HMDB](https://hmdb.ca/) |
+| 116 | `imaging-data-commons` | 科学数据库 | Query and download public cancer imaging data from NCI Imaging… | [NCI Imaging Data Commons](https://github.com/ImagingDataCommons/idc-claude-skill) |
+| 117 | `kegg-database` | 科学数据库 | Direct REST API access to KEGG (academic use only). | [KEGG](https://www.genome.jp/kegg/) |
+| 118 | `metabolomics-workbench-database` | 科学数据库 | Access NIH Metabolomics Workbench via REST API (4,200+ studies). | [Metabolomics Workbench](https://www.metabolomicsworkbench.org/) |
+| 119 | `openalex-database` | 科学数据库 | Query and analyze scholarly literature using the OpenAlex… | [OpenAlex](https://openalex.org/) |
+| 120 | `opentargets-database` | 科学数据库 | Query Open Targets Platform for target-disease associations,… | [Open Targets](https://platform.opentargets.org/) |
+| 121 | `pdb-database` | 科学数据库 | Access RCSB PDB for 3D protein/nucleic acid structures. | [RCSB PDB](https://www.rcsb.org/) |
+| 122 | `pubchem-database` | 科学数据库 | Query PubChem via PUG-REST API/PubChemPy (110M+ compounds). | [PubChem](https://pubchem.ncbi.nlm.nih.gov/) |
+| 123 | `pubmed-database` | 科学数据库 | Direct REST API access to PubMed. | [PubMed](https://pubmed.ncbi.nlm.nih.gov/) |
+| 124 | `reactome-database` | 科学数据库 | Query Reactome REST API for pathway analysis, enrichment,… | [Reactome](https://reactome.org/) |
+| 125 | `string-database` | 科学数据库 | Query STRING API for protein-protein interactions (59M… | [STRING](https://string-db.org/) |
+| 126 | `uniprot-database` | 科学数据库 | Direct REST API access to UniProt. | [UniProt](https://www.uniprot.org/) |
+| 127 | `uspto-database` | 科学数据库 | Access USPTO APIs for patent/trademark searches, examination… | [USPTO Open Data](https://developer.uspto.gov/) |
+| 128 | `zinc-database` | 科学数据库 | Access ZINC (230M+ purchasable compounds). | [ZINC](https://zinc.docking.org/) |
+| 129 | `autogpt-agents` | 大模型工具 | Autonomous AI agent platform for building and deploying… | [AutoGPT](https://github.com/Significant-Gravitas/AutoGPT) |
+| 130 | `blip-2-vision-language` | 大模型工具 | Vision-language pre-training framework bridging frozen image… | [LAVIS (BLIP-2)](https://github.com/salesforce/LAVIS) |
+| 131 | `chroma` | 大模型工具 | Open-source embedding database for AI applications. | [Chroma](https://github.com/chroma-core/chroma) |
+| 132 | `clip` | 大模型工具 | OpenAI's model connecting vision and language. | [CLIP](https://github.com/openai/CLIP) |
+| 133 | `constitutional-ai` | 大模型工具 | Anthropic's method for training harmless AI through… | [Anthropic · Constitutional AI](https://www.anthropic.com/research/constitutional-ai-harmlessness-from-ai-feedback) |
+| 134 | `crewai-multi-agent` | 大模型工具 | Multi-agent orchestration framework for autonomous AI… | [CrewAI](https://github.com/crewAIInc/crewAI) |
+| 135 | `dspy` | 大模型工具 | Build complex AI systems with declarative programming, optimize… | [DSPy](https://github.com/stanfordnlp/dspy) |
+| 136 | `faiss` | 大模型工具 | Facebook's library for efficient similarity search and… | [FAISS](https://github.com/facebookresearch/faiss) |
+| 137 | `generate-image` | 大模型工具 | Generate or edit images using AI models (FLUX, Gemini). | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/llm-tools/generate-image) |
+| 138 | `guidance` | 大模型工具 | Control LLM output with regex and grammars, guarantee valid… | [Guidance](https://github.com/guidance-ai/guidance) |
+| 139 | `hugging-face-cli` | 大模型工具 | Execute Hugging Face Hub operations using the `hf` CLI. | [huggingface_hub](https://github.com/huggingface/huggingface_hub) |
+| 140 | `hugging-face-tool-builder` | 大模型工具 | Build tool/scripts or achieve a task where using data from the… | [huggingface_hub](https://github.com/huggingface/huggingface_hub) |
+| 141 | `huggingface-tokenizers` | 大模型工具 | Fast tokenizers optimized for research and production. | [Tokenizers](https://github.com/huggingface/tokenizers) |
+| 142 | `instructor` | 大模型工具 | Extract structured data from LLM responses with Pydantic… | [Instructor](https://github.com/567-labs/instructor) |
+| 143 | `langchain` | 大模型工具 | Framework for building LLM-powered applications with agents,… | [LangChain](https://github.com/langchain-ai/langchain) |
+| 144 | `langsmith-observability` | 大模型工具 | LLM observability platform for tracing, evaluation, and… | [LangSmith SDK](https://github.com/langchain-ai/langsmith-sdk) |
+| 145 | `llamaguard` | 大模型工具 | Meta's 7-8B specialized moderation model for LLM input/output… | [PurpleLlama (Llama Guard)](https://github.com/meta-llama/PurpleLlama) |
+| 146 | `llamaindex` | 大模型工具 | Data framework for building LLM applications with RAG. | [LlamaIndex](https://github.com/run-llama/llama_index) |
+| 147 | `llava` | 大模型工具 | Large Language and Vision Assistant. | [LLaVA](https://github.com/haotian-liu/LLaVA) |
+| 148 | `llm-as-judge-evaluation` | 大模型工具 | Evaluate LLM outputs using frontier models as judges. | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/llm-tools/llm-as-judge-evaluation) |
+| 149 | `long-context` | 大模型工具 | Extend context windows of transformer models using RoPE, YaRN,… | [YaRN](https://github.com/jquesnelle/yarn) |
+| 150 | `nemo-guardrails` | 大模型工具 | NVIDIA's runtime safety framework for LLM applications. | [NeMo Guardrails](https://github.com/NVIDIA/NeMo-Guardrails) |
+| 151 | `outlines` | 大模型工具 | Guarantee valid JSON/XML/code structure during generation, use… | [Outlines](https://github.com/dottxt-ai/outlines) |
+| 152 | `pinecone` | 大模型工具 | Managed vector database for production AI applications. | [Pinecone Python Client](https://github.com/pinecone-io/pinecone-python-client) |
+| 153 | `qdrant-vector-search` | 大模型工具 | High-performance vector similarity search engine for RAG and… | [Qdrant](https://github.com/qdrant/qdrant) |
+| 154 | `segment-anything-model` | 大模型工具 | Foundation model for image segmentation with zero-shot transfer. | [Segment Anything](https://github.com/facebookresearch/segment-anything) |
+| 155 | `sentence-transformers` | 大模型工具 | Framework for state-of-the-art sentence, text, and image… | [Sentence Transformers](https://github.com/UKPLab/sentence-transformers) |
+| 156 | `sentencepiece` | 大模型工具 | Language-independent tokenizer treating text as raw Unicode. | [SentencePiece](https://github.com/google/sentencepiece) |
+| 157 | `stable-diffusion-image-generation` | 大模型工具 | State-of-the-art text-to-image generation with Stable Diffusion… | [HuggingFace Diffusers](https://github.com/huggingface/diffusers) |
+| 158 | `transformers` | 大模型工具 | When working with pre-trained transformer models for natural… | [Transformers](https://github.com/huggingface/transformers) |
+| 159 | `whisper` | 大模型工具 | OpenAI's general-purpose speech recognition model. | [Whisper](https://github.com/openai/whisper) |
+| 160 | `admet-prediction` | 化学 | ADMET property prediction for drug candidates. | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/chemistry/admet-prediction) |
+| 161 | `admet-reasoning` | 化学 | Interpretable ADMET analysis with mechanistic reasoning. | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/chemistry/admet-reasoning) |
+| 162 | `binding-affinity` | 化学 | Hybrid ML + physics binding affinity prediction. | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/chemistry/binding-affinity) |
+| 163 | `datamol` | 化学 | Pythonic wrapper around RDKit with simplified interface and… | [Datamol](https://github.com/datamol-io/datamol) |
+| 164 | `deepchem` | 化学 | Molecular ML with diverse featurizers and pre-built datasets. | [DeepChem](https://github.com/deepchem/deepchem) |
+| 165 | `denovo-design` | 化学 | De novo molecule generation for drug discovery. | [REINVENT 4](https://github.com/MolecularAI/REINVENT4) |
+| 166 | `diffdock` | 化学 | Diffusion-based molecular docking. | [DiffDock](https://github.com/gcorso/DiffDock) |
+| 167 | `drug-design` | 化学 | End-to-end drug discovery pipeline orchestration. | [AutoDock Vina](https://github.com/ccsb-scripps/AutoDock-Vina) |
+| 168 | `hypogenic` | 化学 | Automated LLM-driven hypothesis generation and testing on… | [HypoGeniC](https://github.com/ChicagoHAI/hypothesis-generation) |
+| 169 | `matchms` | 化学 | Spectral similarity and compound identification for… | [Matchms](https://github.com/matchms/matchms) |
+| 170 | `medchem` | 化学 | Medicinal chemistry filters. | [Medchem](https://github.com/datamol-io/medchem) |
+| 171 | `molecular-docking` | 化学 | End-to-end molecular docking pipeline. | [AutoDock Vina](https://github.com/ccsb-scripps/AutoDock-Vina) |
+| 172 | `molecular-optimization` | 化学 | Iterative lead optimization with… | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/chemistry/molecular-optimization) |
+| 173 | `molecular-rag` | 化学 | Retrieve structurally similar compounds with known properties… | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/chemistry/molecular-rag) |
+| 174 | `molecule-visualization` | 化学 | Publication-quality molecular visualization. | [3Dmol.js](https://github.com/3dmol/3Dmol.js) |
+| 175 | `molfeat` | 化学 | Molecular featurization for ML (100+ featurizers). | [Molfeat](https://github.com/datamol-io/molfeat) |
+| 176 | `pocket-detection` | 化学 | Multi-method binding pocket detection and druggability… | [fpocket](https://github.com/Discngine/fpocket) |
+| 177 | `pyopenms` | 化学 | Complete mass spectrometry analysis platform. | [OpenMS](https://github.com/OpenMS/OpenMS) |
+| 178 | `pytdc` | 化学 | Therapeutics Data Commons. | [Therapeutics Data Commons](https://github.com/mims-harvard/TDC) |
+| 179 | `rdkit` | 化学 | Cheminformatics toolkit for fine-grained molecular control. | [RDKit](https://github.com/rdkit/rdkit) |
+| 180 | `smiles-validation` | 化学 | Strict SMILES validation, structural comparison, and… | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/chemistry/smiles-validation) |
+| 181 | `structure-prediction` | 化学 | Protein structure prediction from sequence. | [ESM](https://github.com/facebookresearch/esm) |
+| 182 | `torchdrug` | 化学 | PyTorch-native graph neural networks for molecules and proteins. | [TorchDrug](https://github.com/DeepGraphLearning/torchdrug) |
+| 183 | `astropy` | 物理学 | Comprehensive Python library for astronomy and astrophysics. | [Astropy](https://github.com/astropy/astropy) |
+| 184 | `autoregressive-neural-pde-solver` | 物理学 | Training patterns for autoregressive neural PDE solvers (FNO,… | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/physics/autoregressive-neural-pde-solver) |
+| 185 | `bayesian-inference` | 物理学 | Bayesian parameter estimation with MCMC (emcee) and… | [emcee](https://github.com/dfm/emcee) |
+| 186 | `conservation-law-discovery` | 物理学 | Discover conserved quantities and symmetries from trajectory… | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/physics/conservation-law-discovery) |
+| 187 | `dimensional-analysis` | 物理学 | Automated dimensional analysis — Buckingham Pi theorem,… | [Pint](https://github.com/hgrecco/pint) |
+| 188 | `dynamical-systems` | 物理学 | Analyze nonlinear dynamical systems — phase portraits, fixed… | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/physics/dynamical-systems) |
+| 189 | `fluid-dynamics` | 物理学 | Computational fluid dynamics — Navier-Stokes solvers,… | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/physics/fluid-dynamics) |
+| 190 | `fluidsim` | 物理学 | Framework for computational fluid dynamics simulations using… | [FluidSim](https://github.com/fluiddyn/fluidsim) |
+| 191 | `hamiltonian-mechanics` | 物理学 | Hamiltonian mechanics — symplectic integrators (leapfrog,… | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/physics/hamiltonian-mechanics) |
+| 192 | `neural-operator` | 物理学 | Train neural operators (FNO, DeepONet) to learn solution maps… | [NeuralOperator](https://github.com/neuraloperator/neuraloperator) |
+| 193 | `ode-solver` | 物理学 | Solve ordinary differential equations (initial and boundary… | [SciPy](https://github.com/scipy/scipy) |
+| 194 | `pde-solver` | 物理学 | Solve partial differential equations — finite differences,… | [DeepXDE](https://github.com/lululxvi/deepxde) |
+| 195 | `physics-databases` | 物理学 | Query physics databases — NIST CODATA constants, NIST Chemistry… | [Materials Project API](https://github.com/materialsproject/api) |
+| 196 | `physics-fitting` | 物理学 | Nonlinear curve fitting for physics data with proper error… | [lmfit](https://github.com/lmfit/lmfit-py) |
+| 197 | `physics-visualization` | 物理学 | Publication-quality physics plots — vector fields, streamlines,… | [Matplotlib](https://github.com/matplotlib/matplotlib) |
+| 198 | `pinn-training` | 物理学 | Train Physics-Informed Neural Networks (PINNs) using DeepXDE. | [DeepXDE](https://github.com/lululxvi/deepxde) |
+| 199 | `pymatgen` | 物理学 | Materials science toolkit. | [Pymatgen](https://github.com/materialsproject/pymatgen) |
+| 200 | `shock-capturing-neural-operators` | 物理学 | Architectures and techniques for neural operators on… | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/physics/shock-capturing-neural-operators) |
+| 201 | `sindy-identification` | 物理学 | Sparse Identification of Nonlinear Dynamics (SINDy) — discover… | [PySINDy](https://github.com/dynamicslab/pysindy) |
+| 202 | `spectral-analysis` | 物理学 | Frequency-domain analysis — FFT, power spectral density… | [SciPy](https://github.com/scipy/scipy) |
+| 203 | `statistical-mechanics` | 物理学 | Monte Carlo simulation for statistical mechanics — Ising model,… | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/physics/statistical-mechanics) |
+| 204 | `symbolic-regression` | 物理学 | Discover governing equations from data using PySR (evolutionary… | [PySR](https://github.com/MilesCranmer/PySR) |
+| 205 | `wave-propagation` | 物理学 | Simulate wave propagation — acoustic, electromagnetic, elastic,… | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/physics/wave-propagation) |
+| 206 | `arboreto` | 科学计算 | Infer gene regulatory networks (GRNs) from gene expression data… | [Arboreto](https://github.com/aertslab/arboreto) |
+| 207 | `audiocraft-audio-generation` | 科学计算 | PyTorch library for audio generation including text-to-music… | [AudioCraft](https://github.com/facebookresearch/audiocraft) |
+| 208 | `denario` | 科学计算 | Multiagent AI system for scientific research assistance that… | [Denario](https://github.com/AstroPilot-AI/Denario) |
+| 209 | `exploratory-data-analysis` | 科学计算 | Analyze scientific data files across 200+ formats at the depth… | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/coding/exploratory-data-analysis) |
+| 210 | `gtars` | 科学计算 | High-performance toolkit for genomic interval analysis in Rust… | [Gtars](https://github.com/databio/gtars) |
+| 211 | `matlab` | 科学计算 | MATLAB and GNU Octave numerical computing for matrix… | [MATLAB](https://www.mathworks.com/products/matlab.html) |
+| 212 | `multi-objective-optimization` | 科学计算 | Pareto-aware molecular design balancing multiple ADMET… | [pymoo](https://github.com/anyoptimization/pymoo) |
+| 213 | `networkx` | 科学计算 | Comprehensive toolkit for creating, analyzing, and visualizing… | [NetworkX](https://github.com/networkx/networkx) |
+| 214 | `pymc-bayesian-modeling` | 科学计算 | Bayesian modeling with PyMC. | [PyMC](https://github.com/pymc-devs/pymc) |
+| 215 | `pymoo` | 科学计算 | Multi-objective optimization framework. | [pymoo](https://github.com/anyoptimization/pymoo) |
+| 216 | `rowan` | 科学计算 | Cloud-based quantum chemistry platform with Python API. | [Rowan](https://github.com/rowansci/rowan-python) |
+| 217 | `scikit-learn` | 科学计算 | Machine learning in Python with scikit-learn. | [scikit-learn](https://github.com/scikit-learn/scikit-learn) |
+| 218 | `shap` | 科学计算 | Model interpretability and explainability using SHAP (SHapley… | [SHAP](https://github.com/shap/shap) |
+| 219 | `simpy` | 科学计算 | Process-based discrete-event simulation framework in Python. | [SimPy](https://gitlab.com/team-simpy/simpy) |
+| 220 | `slime-rl-training` | 科学计算 | Provides guidance for LLM post-training with RL using slime, a… | [slime](https://github.com/THUDM/slime) |
+| 221 | `statistical-analysis` | 科学计算 | Guided statistical analysis with test selection and reporting. | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/coding/statistical-analysis) |
+| 222 | `statsmodels` | 科学计算 | Statistical models library for Python. | [statsmodels](https://github.com/statsmodels/statsmodels) |
+| 223 | `sympy` | 科学计算 | Working with symbolic mathematics in Python. | [SymPy](https://github.com/sympy/sympy) |
+| 224 | `torch-geometric` | 科学计算 | Graph Neural Networks (PyG). | [PyTorch Geometric](https://github.com/pyg-team/pytorch_geometric) |
+| 225 | `umap-learn` | 科学计算 | UMAP dimensionality reduction. | [UMAP](https://github.com/lmcinnes/umap) |
+| 226 | `compare` | 科研流程 | Compare runs, artifacts, methods, models, or claims on a fair… | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/research/compare) |
+| 227 | `conducting-scientific-research` | 科研流程 | Conduct rigorous, reproducible multi-step scientific work with… | [Shoko-official · Claude-Science-System-Prompts](https://github.com/Shoko-official/Claude-Science-System-Prompts) |
+| 228 | `export` | 科研流程 | Package results with provenance, reproduction instructions,… | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/research/export) |
+| 229 | `hypothesis-generation` | 科研流程 | Generate testable hypotheses. | [Hypothesis Generation](https://github.com/ChicagoHAI/hypothesis-generation) |
+| 230 | `market-research-reports` | 科研流程 | Generate comprehensive market research reports (50+ pages) in… | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/research/market-research-reports) |
+| 231 | `peer-review` | 科研流程 | Systematic peer review toolkit. | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/research/peer-review) |
+| 232 | `perplexity-search` | 科研流程 | Perform AI-powered web searches with real-time information… | [LiteLLM (Perplexity)](https://github.com/BerriAI/litellm) |
+| 233 | `reproduce` | 科研流程 | Reproduce a claim, paper result, artifact, or run with exact… | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/research/reproduce) |
+| 234 | `research-grants` | 科研流程 | Write competitive research proposals for NSF, NIH, DOE, and… | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/research/research-grants) |
+| 235 | `research-lookup` | 科研流程 | Look up current research information using Perplexity's Sonar… | [Perplexity Sonar](https://docs.perplexity.ai/) |
+| 236 | `research-workflows` | 科研流程 | Execute rigorous planning, review, verification, reproduction,… | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/research/research-workflows) |
+| 237 | `review` | 科研流程 | Independently review code, results, claims, or an artifact and… | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/research/review) |
+| 238 | `scholar-evaluation` | 科研流程 | Evaluate scholarly work with structured criteria for rigor,… | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/scholar-evaluation) |
+| 239 | `scientific-brainstorming` | 科研流程 | Creative research ideation and exploration. | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/research/scientific-brainstorming) |
+| 240 | `scientific-critical-thinking` | 科研流程 | Evaluate research rigor. | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/research/scientific-critical-thinking) |
+| 241 | `scientific-problem-selection` | 科研流程 | When scientists need help with research problem selection,… | [Shoko-official · Claude-Science-System-Prompts](https://github.com/Shoko-official/Claude-Science-System-Prompts) |
+| 242 | `sources` | 科研流程 | Audit sources, citations, and unsupported claims using a… | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/research/sources) |
+| 243 | `verify` | 科研流程 | Run real checks for a claim, implementation, result, or… | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/research/verify) |
+| 244 | `checkpoint` | 会话与工程 | Save a local recovery packet from durable session state. | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/other/checkpoint) |
+| 245 | `compact` | 会话与工程 | Compact the current chat context into a concise summary. | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/other/compact) |
+| 246 | `context` | 会话与工程 | Show the current conversation context composition, estimated… | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/other/context) |
+| 247 | `get-available-resources` | 会话与工程 | At the start of any computationally intensive scientific task… | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/other/get-available-resources) |
+| 248 | `goal` | 会话与工程 | Set an explicit objective, success criteria, and stopping… | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/other/goal) |
+| 249 | `handoff` | 会话与工程 | Create a self-contained continuation packet for another agent. | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/other/handoff) |
+| 250 | `hugging-face-jobs` | 会话与工程 | When users want to run any workload on Hugging Face Jobs… | [huggingface_hub](https://github.com/huggingface/huggingface_hub) |
+| 251 | `hugging-face-trackio` | 会话与工程 | Track and visualize ML training experiments with Trackio. | [Trackio](https://github.com/gradio-app/trackio) |
+| 252 | `init` | 会话与工程 | Create or refresh an AGENTS.md project instruction file. | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/other/init) |
+| 253 | `iso-13485-certification` | 会话与工程 | Comprehensive toolkit for preparing ISO 13485 certification… | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/other/iso-13485-certification) |
+| 254 | `labarchive-integration` | 会话与工程 | Electronic lab notebook API integration. | [labarchives-py](https://github.com/mcmero/labarchives-py) |
+| 255 | `plan` | 会话与工程 | Enter read-only plan mode and produce a decision-ready plan. | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/other/plan) |
+| 256 | `resume` | 会话与工程 | Resume an exhausted bounded research run from its existing… | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/other/resume) |
+| 257 | `skill-installer` | 会话与工程 | Install or remove third-party openscience skills from a public… | [Anthropic Skills](https://github.com/anthropics/skills) |
+| 258 | `status` | 会话与工程 | Show live session, plan, artifact, model, and workspace state. | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/other/status) |
+| 259 | `stop` | 会话与工程 | Stop active work in the current session. | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/other/stop) |
+| 260 | `fireworks-ai-inference` | 云端算力 | Fast inference and fine-tuning platform with serverless and… | [Fireworks AI](https://github.com/fw-ai/cookbook) |
+| 261 | `givemeanode-agent-compute` | 云端算力 | Operate GiveMeANode GPU nodes, batch jobs, storage, and rollout… | [GiveMeANode](https://givemeanode.com/docs) |
+| 262 | `lambda-gpu-cloud` | 云端算力 | Safely inspect and operate Lambda Cloud GPU instances through… | [Lambda](https://lambda.ai/) |
+| 263 | `modal-serverless-gpu` | 云端算力 | Run approved CPU or GPU work through OpenScience compute_job on… | [Modal](https://github.com/modal-labs/modal-client) |
+| 264 | `runpod-gpu-cloud` | 云端算力 | Safely inspect and operate RunPod resources with runpodctl,… | [RunPod](https://github.com/runpod/runpodctl) |
+| 265 | `skypilot-multi-cloud-orchestration` | 云端算力 | Multi-cloud orchestration for ML workloads with automatic cost… | [SkyPilot](https://github.com/skypilot-org/skypilot) |
+| 266 | `tensorpool-gpu-cloud` | 云端算力 | Safely inspect and operate TensorPool GPU clusters and jobs… | [TensorPool](https://github.com/tensorpool/tensorpool) |
+| 267 | `tinker-fine-tuning` | 云端算力 | Provides guidance for fine-tuning LLMs using the Tinker cloud… | [Tinker](https://github.com/thinking-machines-lab/tinker-cookbook) |
+| 268 | `tinker-training-cost` | 云端算力 | Calculates training costs for Tinker fine-tuning jobs. | [Tinker](https://github.com/thinking-machines-lab/tinker-cookbook) |
+| 269 | `together-ai-inference` | 云端算力 | Serverless inference, fine-tuning, embeddings, image… | [Together AI](https://github.com/togethercomputer/together-python) |
+| 270 | `vast-ai-gpu-cloud` | 云端算力 | Safely inspect and operate Vast.ai marketplace instances with… | [Vast.ai](https://github.com/vast-ai/vast-python) |
+| 271 | `aeon` | 数据工程 | For time series machine learning tasks including… | [aeon](https://github.com/aeon-toolkit/aeon) |
+| 272 | `dask` | 数据工程 | Distributed computing for larger-than-RAM pandas/NumPy… | [Dask](https://github.com/dask/dask) |
+| 273 | `geopandas` | 数据工程 | Python library for working with geospatial vector data… | [GeoPandas](https://github.com/geopandas/geopandas) |
+| 274 | `hdf5-pde-data-loading` | 数据工程 | Patterns for loading PDE simulation datasets (PDEBench,… | [HDF5 / h5py](https://github.com/h5py/h5py) |
+| 275 | `hugging-face-datasets` | 数据工程 | Create and manage datasets on Hugging Face Hub. | [Datasets](https://github.com/huggingface/datasets) |
+| 276 | `markitdown` | 数据工程 | Convert files and office documents to Markdown. | [MarkItDown](https://github.com/microsoft/markitdown) |
+| 277 | `polars` | 数据工程 | Fast in-memory DataFrame library for datasets that fit in RAM. | [Polars](https://github.com/pola-rs/polars) |
+| 278 | `ray-data` | 数据工程 | Scalable data processing for ML workloads. | [Ray Data](https://github.com/ray-project/ray) |
+| 279 | `vaex` | 数据工程 | Processing and analyzing large tabular datasets (billions of… | [Vaex](https://github.com/vaexio/vaex) |
+| 280 | `zarr-python` | 数据工程 | Chunked N-D arrays for cloud storage. | [Zarr](https://github.com/zarr-developers/zarr-python) |
+| 281 | `citation-management` | 论文写作 | Comprehensive citation management for academic research. | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/writing/citation-management) |
+| 282 | `hugging-face-paper-publisher` | 论文写作 | Publish and manage research papers on Hugging Face Hub. | [huggingface_hub](https://github.com/huggingface/huggingface_hub) |
+| 283 | `latex-posters` | 论文写作 | Create professional research posters in LaTeX using… | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/writing/latex-posters) |
+| 284 | `literature-review` | 论文写作 | Answer literature-review requests with a concise,… | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/writing/literature-review) |
+| 285 | `ml-paper-writing` | 论文写作 | Write publication-ready ML/AI papers for NeurIPS, ICML, ICLR,… | [ACL Style Files](https://github.com/acl-org/acl-style-files) |
+| 286 | `paper-2-web` | 论文写作 | When converting academic papers into promotional and… | [Paper2All](https://github.com/YuhangChen1/Paper2All) |
+| 287 | `pptx-posters` | 论文写作 | Create research posters using HTML/CSS that can be exported to… | [python-pptx](https://github.com/scanny/python-pptx) |
+| 288 | `scientific-slides` | 论文写作 | Build slide decks and presentations for research talks using… | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/writing/scientific-slides) |
+| 289 | `scientific-writing` | 论文写作 | Core skill for the deep research and writing tool. | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/writing/scientific-writing) |
+| 290 | `venue-templates` | 论文写作 | Access comprehensive LaTeX templates, formatting requirements,… | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/writing/venue-templates) |
+| 291 | `gguf-quantization` | 模型推理 | GGUF format and llama.cpp quantization for efficient CPU/GPU… | [llama.cpp](https://github.com/ggml-org/llama.cpp) |
+| 292 | `groq-inference` | 模型推理 | Ultra-fast LLM inference on custom LPU hardware. | [Groq Python SDK](https://github.com/groq/groq-python) |
+| 293 | `llama-cpp` | 模型推理 | Runs LLM inference on CPU, Apple Silicon, and consumer GPUs… | [llama.cpp](https://github.com/ggml-org/llama.cpp) |
+| 294 | `miles-rl-training` | 模型推理 | Provides guidance for enterprise-grade RL training using miles,… | [Miles](https://github.com/radixark/miles) |
+| 295 | `phoenix-observability` | 模型推理 | Open-source AI observability platform for LLM tracing,… | [Arize Phoenix](https://github.com/Arize-ai/phoenix) |
+| 296 | `serving-llms-vllm` | 模型推理 | Serves LLMs with high throughput using vLLM's PagedAttention… | [vLLM](https://github.com/vllm-project/vllm) |
+| 297 | `sglang` | 模型推理 | Fast structured generation and serving for LLMs with… | [SGLang](https://github.com/sgl-project/sglang) |
+| 298 | `speculative-decoding` | 模型推理 | Accelerate LLM inference using speculative decoding, Medusa… | [Medusa](https://github.com/FasterDecoding/Medusa) |
+| 299 | `tensorrt-llm` | 模型推理 | Optimizes LLM inference with NVIDIA TensorRT for maximum… | [TensorRT-LLM](https://github.com/NVIDIA/TensorRT-LLM) |
+| 300 | `dna-visualization` | 科学可视化 | Publication-quality DNA/RNA visualizations. | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/visualization/dna-visualization) |
+| 301 | `infographics` | 科学可视化 | Create professional infographics using Nano Banana Pro AI with… | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/visualization/infographics) |
+| 302 | `matplotlib` | 科学可视化 | Low-level plotting library for full customization. | [Matplotlib](https://github.com/matplotlib/matplotlib) |
+| 303 | `plotly` | 科学可视化 | Interactive visualization library. | [Plotly.py](https://github.com/plotly/plotly.py) |
+| 304 | `protein-diagram` | 科学可视化 | Publication-quality protein analysis diagrams. | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/visualization/protein-diagram) |
+| 305 | `scientific-schematics` | 科学可视化 | Create or refine publication-quality technical diagrams,… | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/visualization/scientific-schematics) |
+| 306 | `scientific-visualization` | 科学可视化 | Meta-skill for publication-ready figures. | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/visualization/scientific-visualization) |
+| 307 | `seaborn` | 科学可视化 | Statistical visualization with pandas integration. | [Seaborn](https://github.com/mwaskom/seaborn) |
+| 308 | `cirq` | 量子计算 | Google quantum computing framework. | [Cirq](https://github.com/quantumlib/Cirq) |
+| 309 | `pennylane` | 量子计算 | Hardware-agnostic quantum ML framework with automatic… | [PennyLane](https://github.com/PennyLaneAI/pennylane) |
+| 310 | `qiskit` | 量子计算 | IBM quantum computing framework. | [Qiskit](https://github.com/Qiskit/qiskit) |
+| 311 | `qutip` | 量子计算 | Quantum physics simulation library for open quantum systems. | [QuTiP](https://github.com/qutip/qutip) |
+| 312 | `liteparse` | 文档解析 | Parse, perform multi-format document conversion or spatially… | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/document-parsing/liteparse) |
+
+#### 4.2 MCP 连接器（6 个）
+
+| # | 连接器 | 提供方 | 源仓库 |
+|---:|---|---|---|
+| 1 | **GiveMeANode** | San Francisco Compute | [givemeanode.com/docs](https://givemeanode.com/docs) |
+| 2 | **GitHub MCP Server** | GitHub | [github/github-mcp-server](https://github.com/github/github-mcp-server) |
+| 3 | **Benchling MCP Server** | Benchling | [help.benchling.com/hc/en-us/articles/40…](https://help.benchling.com/hc/en-us/articles/40342713479437-Configure-Benchling-s-MCP-Server-for-other-MCP-clients) |
+| 4 | **Box MCP Server** | Box | [box-community/mcp-server-box](https://github.com/box-community/mcp-server-box) |
+| 5 | **Dropbox Dash MCP Server** | Dropbox | [dropbox/mcp-server-dash](https://github.com/dropbox/mcp-server-dash) |
+| 6 | **AWS MCP Server (Amazon S3)** | AWS | [awslabs/mcp](https://github.com/awslabs/mcp) |
+
+> 「源仓库」列为该子技能所依托的上游开源项目；标注 **OpenScience 自研** 的条目版权归上游 OpenScience 仓库所有。
+> 表中所有链接均已做 HTTP 可用性校验。
+
+<a id="致谢"></a>
+
+### 五、致谢
+
+这份清单能成立，是因为有大量人和项目把东西无偿开放了出来。
+
+**首先感谢 [OpenScience](https://github.com/synthetic-sciences/openscience)（Synthetic Sciences / InkVell Inc.）**——
+312 个子技能、6 个 MCP 目录与整套科研 Agent 架构都出自这里，
+以 Apache-2.0 授权，让下游可以合法地把这套能力搬到别的平台。
+
+**感谢 243 个被封装的开源项目与数据库**，例如：
+[single-cell 生态](https://github.com/scverse/scanpy)（Scanpy / AnnData / scvi-tools）、
+[RDKit](https://github.com/rdkit/rdkit)、[DeepChem](https://github.com/deepchem/deepchem)、
+[Biopython](https://github.com/biopython/biopython)、[PyTorch](https://github.com/pytorch/pytorch)、
+[Hugging Face](https://github.com/huggingface/transformers)（Transformers / TRL / PEFT / Diffusers）、
+[vLLM](https://github.com/vllm-project/vllm)、[SGLang](https://github.com/sgl-project/sglang)、
+[Qiskit](https://github.com/Qiskit/qiskit)、[Astropy](https://github.com/astropy/astropy)、
+[Polars](https://github.com/pola-rs/polars)、[Dask](https://github.com/dask/dask)，
+以及 [PubMed](https://pubmed.ncbi.nlm.nih.gov/)、[UniProt](https://www.uniprot.org/)、
+[PDB](https://www.rcsb.org/)、[ChEMBL](https://www.ebi.ac.uk/chembl/)、
+[KEGG](https://www.genome.jp/kegg/) 等公共数据源。
+
+**感谢成果被直接打包进来的著作权人**：
+[Shoko-official](https://github.com/Shoko-official/Claude-Science-System-Prompts)（2 篇，Apache-2.0）、
+[InkVell Inc.](https://github.com/synthetic-sciences/openscience)（12 篇，MIT）、
+[Microsoft · markitdown](https://github.com/microsoft/markitdown)（1 篇，MIT）、
+Andrey Fedorov（`imaging-data-commons`，1 篇，MIT）。
+
+**感谢 LaTeX 模板与宏包的作者**：Patrick W Daly（natbib）、Piet van Oostrum（fancyhdr）、
+Peter Williams（algorithm / algorithmic）、Hal Daumé III、Norman Gray（urlbst），
+以及 AAAI / ACL / COLM / ICLR / ICML / NeurIPS 各会议模板维护者。
+
+**感谢所有 MCP 服务的提供方**：San Francisco Compute（GiveMeANode）、GitHub、Benchling、Box、Dropbox、AWS。
+
+也感谢每一个在深夜修 issue 的维护者——开源不是免费的，只是有人替你付了账单。
+
+<a id="许可"></a>
+
+### 六、开源许可证
+
+本仓库整体以 **Apache-2.0** 分发，共四份许可与署名文件：
+
+| 文件 | 作用 |
+|---|---|
+| [`LICENSE`](LICENSE) | Apache License 2.0 全文（上游，随附原版权行） |
+| [`NOTICE`](NOTICE) | 上游 NOTICE 要求的署名声明 |
+| [`ATTRIBUTION.md`](ATTRIBUTION.md) | 312 篇子技能的作者与许可分布 |
+| [`THIRD-PARTY-NOTICES.md`](THIRD-PARTY-NOTICES.md) | 内嵌第三方作品清单（MIT / LPPL / 数据条款）与再分发提示 |
+
+**著作权分布**（按 `metadata.skill-author` 实测）：
+
+| 著作权人 | 篇数 | 许可 |
+|---|---:|---|
+| Synthetic Sciences / InkVell Inc. | 130 | Apache-2.0 |
+| 未记录 `skill-author`（按上游默认） | 166 | Apache-2.0 |
+| Shoko-official | 2 | Apache-2.0 |
+| InkVell Inc. | 12 | MIT |
+| Microsoft（`markitdown`） | 1 | MIT |
+| Andrey Fedorov（`imaging-data-commons`） | 1 | MIT |
+
+即 **Apache-2.0 = 298 篇 · MIT = 14 篇**；MIT 部分要求保留版权声明，因此本仓库**必须**随附上述署名文件。
+
+**三点务必注意：**
+
+1. **子技能 frontmatter 里的 `license:` 不是本仓库的许可声明**，它描述的是「该技能所教的第三方库」的许可
+   （例如 `etetoolkit → GPL-3.0` 指 ETE 工具包本身）。文档自身的著作权人记在 `metadata.skill-author`。
+   本包**未内嵌任何 GPL / LGPL / CeCILL 源码**，copyleft 义务不附着于整体。
+2. `skills/writing/ml-paper-writing/templates/` 内打包了第三方 LaTeX 宏包（多为 **LPPL**），
+   **本仓库未附带 `lppl.txt`**，再分发前请从 CTAN 补齐；LPPL 还要求修改过的文件必须改名。
+3. 部分数据库（KEGG、HMDB、DrugBank 等）有**独立的数据使用条款**，非学术用途可能需要商业授权。
+   许可文件不替代这些条款，请自行确认。
+
+仅调度层（`SKILL.md`、`dispatch.py`、`dispatch.cmd`、`registry.json`、`tools/`、`mcp/INSTALL.md`）
+为本项目原创，同样以 Apache-2.0 分发以保持整体一致。
+
+> 本文档是基于源码实测整理的合规声明，**不构成法律意见**。若用于商业或融资场景，建议由法务复核。
+
+<a id="appendix"></a>
+
+### 附录：安装、命令与设计说明
+
+**安装** —— 把整个 `openscience-dispatcher` 文件夹放进平台技能目录即可：
+
+| 平台 | 技能目录 |
+|---|---|
+| WorkBuddy | `%USERPROFILE%\.workbuddy\skills\` |
+| 其它平台 | 该平台的 skills 目录，保持文件夹名不变 |
+
+结果应为 `<技能目录>/openscience-dispatcher/SKILL.md`。
+
+**环境要求**：Python 3.8+（仅用标准库）· Windows 10+ / macOS / Linux。
+Windows 下用 `dispatch.cmd` 即可，它会自动探测 `py -3` / `python` / `python3`。
+
+**命令一览**
+
+| 命令 | 作用 |
+|---|---|
+| `category` | 列出 16 个分类及计数 |
+| `category <名称>` | 浏览某分类全部子技能 |
+| `query "<关键词>" [--top N] [--category X] [--json]` | 关键词打分检索（中文自动做术语展开） |
+| `load <name>` | 载入子技能正文 + 基础目录 + 资源清单 |
+| `list [--category X] [--json]` | 列出全部子技能 |
+| `net` | 显示网络区域判定与镜像源映射 |
+| `mcp config` | 显示 MCP 配置文件的实际路径 |
+| `mcp list` / `mcp show <id>` | 查看 MCP 连接器 |
+| `mcp install <id> [--write] [--config PATH]` | 生成 / 写入 MCP 安装方案 |
+| `mcp plan` | 一次性生成所有可自动安装连接器的方案 |
+
+**设计说明：为什么 312 个子技能不会被误注册**
+子技能位于 `skills/<分类>/<技能>/SKILL.md`（相对技能根目录的第 4 层）。
+主流 Agent 平台的技能发现是**单层**的（只扫描 `<skills>/<名称>/SKILL.md`），
+因此它们不会被当成 312 个顶层技能，也不会拖慢平台启动——
+只能通过本调度器访问，这正是设计意图。
+
+**从上游重建**
+
+```bash
+git clone https://github.com/synthetic-sciences/openscience
+python tools/rebuild.py --source ./openscience   # 重建 skills/ 与 registry.json
+python tools/gen_readme.py                       # 重新生成本清单
+```
+
+**网络自适应**：`dispatch.py` 按 IP 判定区域，自动在 npm / PyPI / GitHub / Docker 的
+国内镜像与国际站之间选择。
+
+**MCP 写入门槛**：默认只打印安装方案，`--write` 才写入且自动备份；
+配置路径优先级 `--config` > `$OSD_MCP_CONFIG` > `~/.workbuddy/mcp.json`；
+写入后仍需在平台连接器页点「信任」才会激活。
+
+---
+
+<a id="english"></a>
+
+## English
+
+> Ports the **312 scientific sub-skills** and **6 MCP connectors** of
+> [OpenScience](https://github.com/synthetic-sciences/openscience) onto generic AI agent platforms.
+> Sub-skills are *capability*, MCP servers are *tooling*, and the dispatcher routes them to your question.
+
+`312` Skills · `16` Categories · `6` MCP Connectors · Apache-2.0 · Python 3.8+ · Zero dependencies
+
+### 1. The real bottleneck for undergrads and master's students
+
+The hardest part of research training is not a missing fact — it is that **nobody teaches you the method itself**.
+Courses hand you a map of knowledge, not the craft of doing research. So most people self-teach by trial and
+error, and the same errors repeat: choosing the wrong statistical test, no power analysis, no pre-registration,
+getting stuck on environment setup, hitting a paywall of compute, and learning paper writing by osmosis.
+
+Worse: a general-purpose LLM without methodological constraints will happily produce
+*confident, well-formatted, wrong* output — which is more dangerous than admitting ignorance.
+
+### 2. What this project does for you
+
+| Scenario | Representative sub-skills |
+|---|---|
+| **Write a paper from scratch** | `scientific-writing`, `literature-review`, `citation-management`, `ml-paper-writing`, `venue-templates`, `latex-posters`, `scientific-slides`, `paper-2-web` |
+| **Design experiments & analyse data** | `statistical-analysis`, `pymc-bayesian-modeling`, `scikit-survival`, `statsmodels`, `shap`, `exploratory-data-analysis`, `pymoo` |
+| **Literature, ideation & self-audit** | `research-lookup`, `hypothesis-generation`, `scientific-problem-selection`, `scientific-critical-thinking`, `peer-review`, `verify`, `reproduce`, `sources` |
+| **Wet-lab ↔ dry-lab handoff** | `molecular-cloning`, `opentrons-integration`, `pylabrobot`, `flow-cytometry-analysis`, `protocolsio-integration`, `pydicom`, `pathml` |
+| **Modelling & omics** | `scanpy`, `anndata`, `scvi-tools`, `pydeseq2`, `biopython`, `pysam`, `deeptools`, `rdkit`, `deepchem`, `diffdock`, `pymatgen`, `astropy`, `qiskit` |
+| **LLM training & serving** | `transformers`, `peft`, `trl`, `unsloth-fine-tuning`, `axolotl`, `deepspeed`, `serving-llms-vllm`, `sglang`, `llama-cpp`, `tensorrt-llm` |
+| **Compute without bill shock** | `skypilot-multi-cloud-orchestration`, `modal-serverless-gpu`, `runpod-gpu-cloud`, `vast-ai-gpu-cloud`, `lambda-gpu-cloud` + on-demand MCP |
+| **Reproducible delivery** | `iso-13485-certification`, `research-grants`, `get-available-resources` |
+
+```bash
+dispatch.cmd query "single cell RNA integration"   # retrieve capability
+dispatch.cmd load scanpy                          # load the full methodology
+dispatch.cmd mcp install github                   # print an install plan (dry run by default)
+```
+
+### 3. Scale
+
+**312 skills across 16 categories + 6 MCP connectors.**
+Of these, 243 wrap a concrete open-source project and 69 are
+OpenScience's own methodology / workflow skills.
+
+The per-skill inventory with source-repository links lives in
+[§4.1 above](#inventory) — it is generated from `registry.json` and `tools/sources.py`,
+and every link is HTTP-verified.
+
+### 4. Acknowledgements
+
+Above all, **[OpenScience](https://github.com/synthetic-sciences/openscience)** (Synthetic Sciences /
+InkVell Inc.) — all 312 sub-skills, the MCP catalogue and the research-agent architecture
+originate there under Apache-2.0.
+
+Thanks also to the 243 open-source projects and public databases these skills wrap
+(Scanpy, RDKit, Biopython, PyTorch, Hugging Face, vLLM, Qiskit, Astropy, PubMed, UniProt, PDB,
+ChEMBL, KEGG …), to the bundled-work copyright holders
+([Shoko-official](https://github.com/Shoko-official/Claude-Science-System-Prompts),
+InkVell Inc., [Microsoft markitdown](https://github.com/microsoft/markitdown), Andrey Fedorov),
+to the LaTeX package authors (Patrick W Daly, Piet van Oostrum, Peter Williams, Hal Daumé III,
+Norman Gray) and venue template maintainers, and to every MCP provider
+(San Francisco Compute, GitHub, Benchling, Box, Dropbox, AWS).
+
+### 5. License
+
+Distributed under **Apache-2.0**. See [`LICENSE`](LICENSE), [`NOTICE`](NOTICE),
+[`ATTRIBUTION.md`](ATTRIBUTION.md) and [`THIRD-PARTY-NOTICES.md`](THIRD-PARTY-NOTICES.md).
+
+- **Apache-2.0 = 298 sub-skills · MIT = 14** (the MIT part requires retaining its copyright notice).
+- The `license:` field inside each sub-skill's frontmatter describes **the third-party library the skill
+  documents**, not this repository. No GPL/LGPL/CeCILL source is bundled.
+- Third-party **LaTeX packages (mostly LPPL)** are bundled under
+  `skills/writing/ml-paper-writing/templates/`; `lppl.txt` is *not* shipped — obtain it before redistributing.
+- Some databases (KEGG, HMDB, DrugBank) carry **separate data-use terms**; a software license does not replace them.
+
+Only the dispatcher layer is original to this project and is released under the same Apache-2.0 terms.
+
+### Appendix: install, commands, design notes
+
+Copy the whole `openscience-dispatcher` folder into your platform's skills directory
+(WorkBuddy: `%USERPROFILE%\.workbuddy\skills\`). The result must be
+`<skills-dir>/openscience-dispatcher/SKILL.md`. Requires Python 3.8+ (standard library only),
+Windows 10+ / macOS / Linux; on Windows `dispatch.cmd` auto-detects `py -3` / `python` / `python3`.
+
+| Command | Purpose |
+|---|---|
+| `category` / `category <name>` | List the 16 categories / browse one |
+| `query "<text>" [--top N] [--category X] [--json]` | Scored retrieval (Chinese is term-expanded) |
+| `load <name>` | Print the sub-skill body, base directory and resources |
+| `list [--category X] [--json]` | List every sub-skill |
+| `net` | Show the detected region and mirror mapping |
+| `mcp config` | Show the resolved MCP client config path |
+| `mcp list` / `mcp show <id>` | Inspect MCP connectors |
+| `mcp install <id> [--write] [--config PATH]` | Print or persist an install plan |
+
+Sub-skills live at `skills/<category>/<skill>/SKILL.md` — depth 4, below the single-level
+skill scan that mainstream agent platforms use, so the 312 sub-skills are never
+registered as top-level skills. That is intentional.
+
+```bash
+git clone https://github.com/synthetic-sciences/openscience
+python tools/rebuild.py --source ./openscience   # rebuild skills/ and registry.json
+python tools/gen_readme.py                       # regenerate this inventory
+```
+
+MCP writes are opt-in: the plan is printed by default, `--write` persists with an automatic
+backup. Config path precedence is `--config` > `$OSD_MCP_CONFIG` > `~/.workbuddy/mcp.json`;
+a written server still needs to be "Trusted" in the platform's connector page.
+
+> Compiled from source inspection; **not legal advice**.
