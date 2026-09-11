@@ -1,0 +1,19 @@
+# 统一行尾，避免跨平台协作时产生整文件 diff
+* text=auto eol=lf
+
+# Windows 批处理必须保持 CRLF
+*.cmd text eol=crlf
+*.bat text eol=crlf
+
+# 二进制资源不做行尾转换
+*.pdf binary
+*.zip binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.svg binary
+*.aac binary
+*.parquet binary
+*.h5 binary
+*.hdf5 binary

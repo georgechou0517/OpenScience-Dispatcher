@@ -1,0 +1,14 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# MCP config backups written by dispatch.py --write
+*.bak-*
+
+# OS noise
+.DS_Store
+Thumbs.db
+desktop.ini
