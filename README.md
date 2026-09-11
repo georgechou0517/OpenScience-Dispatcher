@@ -93,9 +93,142 @@ dispatch.cmd load scanpy                 # 载入该子技能的完整方法论
 dispatch.cmd mcp install github          # 生成 MCP 安装方案（默认只看不写）
 ```
 
+<a id="使用"></a>
+
+### 三、如何安装与使用（零基础，照着做就行）
+
+这一节写给完全不懂编程的人。**不需要会写代码，也不需要显卡。**
+
+#### 3.1 先搞清两个名词
+
+| 名词 | 大白话 | 你要做的事 |
+|---|---|---|
+| **AI Agent 平台** | 你平时提问的那个 AI 对话框（本文以 WorkBuddy 为例，其它支持「技能 / Skill」的平台同理） | 装好、能正常对话 |
+| **技能（Skill）** | 一包「科研方法说明书」。AI 平时不碰它，你一提问它才去翻 | 把这个文件夹放对位置 |
+
+放对位置之后就一直在那儿了，不用每次重装。
+
+#### 3.2 安装：三步
+
+**第 1 步 · 下载**
+
+打开本仓库页面 → 点绿色的 **「克隆/下载」** → **「下载 ZIP」**，得到一个约 7 MB 的压缩包。
+
+**第 2 步 · 找到技能目录**
+
+Windows：按 `Win + R`，粘贴下面这行后回车——
+
+```
+%USERPROFILE%\.workbuddy\skills
+```
+
+macOS：Finder → 顶部菜单「前往」→「前往文件夹」→ 粘贴 `~/.workbuddy/skills`
+
+> 文件夹不存在说明平台还没建过技能目录：手动新建一个名为 `.workbuddy` 的文件夹，进去再新建 `skills`。**名字前面那个点不能丢。**
+> 用其它平台的话，把 `.workbuddy\skills` 换成该平台的技能目录即可。
+
+**第 3 步 · 解压进去**
+
+解压后会得到 `open-science-dispatcher-main` 文件夹（Gitee 会自动加分支后缀）。
+先把它**改名为 `openscience-dispatcher`**，再整个拖进 `skills` 目录。
+
+装完的层级必须是这样（多一层、少一层都不行）：
+
+```
+skills
+└── openscience-dispatcher
+    ├── SKILL.md          ← 关键文件，必须在这一层
+    ├── dispatch.cmd
+    ├── registry.json
+    ├── skills\           ← 312 个子技能在这里
+    ├── mcp\
+    └── tools\
+```
+
+> **Windows 用户注意**：检索脚本需要 Python 3.8+。若没装，打开 Microsoft Store 搜「Python」装一个（免费，一分钟），装完重开对话即可。macOS 自带，可跳过这条。
+
+#### 3.3 验证装好了没
+
+新开一个对话，随口问一句：
+
+> 用 OpenScience 帮我查一下二甲双胍对心血管结局的证据
+
+回答里若出现 `pubmed-database`、`literature-review` 这类子技能名，就装好了。
+没反应的话，九成是目录层级放错，回第 3 步对一遍。
+
+#### 3.4 日常怎么用：说人话就行
+
+**不用记任何命令**，也不用提「技能」两个字。把它当成一个既懂科研方法、又熟悉各种工具的师兄，用中文把事说清楚。
+
+说清下面四件事，效果差别很大：
+
+| 要说清楚 | 差的问法 | 好的问法 |
+|---|---|---|
+| **你的身份和水平** | 「帮我写论文」 | 「我是临床医学本科生，没写过综述」 |
+| **具体题目** | 「研究一下糖尿病」 | 「二甲双胍对 2 型糖尿病患者心血管结局的影响」 |
+| **手上有什么** | （不说） | 「我只有学校图书馆的 PubMed 权限，没有原始数据」 |
+| **要什么产物** | 「整理一下」 | 「给我一份带 DOI 的文献清单 + 一张数据提取表」 |
+
+#### 3.5 完整例子：一个临床医学科研小课题
+
+> **场景**：你是临床医学本科生，导师让你三天后在组会上讲清「二甲双胍对 2 型糖尿病患者心血管结局的影响」。你没做过循证检索，也不知道该讲什么。
+
+**第 1 步 · 要证据**
+
+> 我是临床医学本科生，要在组会上讲「二甲双胍对 2 型糖尿病患者心血管结局的影响」。请检索近 10 年的随机对照试验和 meta 分析，只看成人心血管终点（MACE）相关的，给我一份带 DOI 的清单。
+
+背后发生的事：`pubmed-database` 检索 PubMed、`literature-review` 按纳入排除标准筛选、`citation-management` 规范引文。
+
+**第 2 步 · 把证据变成表**
+
+> 把上面这些研究抽成一张表：研究名、发表年份、样本量、随访时长、主要终点、效应值（HR 及 95%CI）。
+
+直接得到一张能贴进 PPT 的表。
+
+**第 3 步 · 补方法学（最容易翻车的一步）**
+
+> 这些研究的终点定义不完全一样，能直接合并吗？异质性怎么判断？该用固定效应还是随机效应模型？如果做不了 meta 分析，我该怎么组织这场汇报？
+
+背后：`statistical-analysis`、`scientific-critical-thinking`。
+**这一步是「AI 帮倒忙」和「AI 真帮上忙」的分界线**——跳过它，你会拿到一段格式漂亮但方法学站不住的结论。
+
+**第 4 步 · 成稿**
+
+> 把上面整理成一份 8 页的中文汇报稿，按背景、方法、结果、讨论、局限、参考文献的结构写，参考文献用温哥华格式。
+
+背后：`scientific-writing`、`citation-management`。
+
+**第 5 步 · 自查（强烈建议）**
+
+> 逐句检查这份稿子：每个结论都要能追溯到上面那份文献清单里的具体研究，把没有出处支撑的句子单独列出来。
+
+背后：`verify`、`sources`、`peer-review`。**这一步能挡掉大部分「看着很专业、其实是编的」内容。**
+
+**想继续往下做**：有真实病例可走 `clinical-reports`；要设计前瞻性研究可走 `scientific-problem-selection`；要投期刊可走 `venue-templates`。
+
+#### 3.6 常见问题
+
+**Q：问完没反应，回答和普通 AI 一样？**
+A：查目录层级，必须是 `skills\openscience-dispatcher\SKILL.md`。解压时多套了一层文件夹是最常见的原因。
+
+**Q：需要联网吗？**
+A：检索类技能（PubMed、ClinicalTrials、UniProt 等）需要联网；纯方法论技能离线可用。
+
+**Q：要花钱吗？**
+A：技能本身免费（Apache-2.0）。只有云 GPU 类技能（`runpod-gpu-cloud` 等）会产生费用，且默认只生成方案、不实际下单。
+
+**Q：会不会自动改我文件、乱下单？**
+A：不会。写 MCP 配置默认只打印方案，显式加 `--write` 才写入且自动备份；云算力类会先出方案等你确认。
+
+**Q：需要装 Python 吗？**
+A：检索脚本 `dispatch.py` 需要 Python 3.8+（Windows 去 Microsoft Store 搜「Python」免费装，macOS 自带）。实在不装也能用——Agent 会直接翻阅技能目录，只是关键词检索不如脚本准。
+
+**Q：怎么卸载？**
+A：直接删掉 `skills\openscience-dispatcher` 文件夹，无残留。
+
 <a id="规模"></a>
 
-### 三、规模：312 个开源 skill + 6 个 MCP
+### 四、规模：312 个开源 skill + 6 个 MCP
 
 全部内容来自 OpenScience 的源码树，按 **16 个分类**组织：
 
@@ -126,9 +259,9 @@ dispatch.cmd mcp install github          # 生成 MCP 安装方案（默认只�
 
 <a id="inventory"></a>
 
-### 四、全部清单（含源仓库链接）
+### 五、全部清单（含源仓库链接）
 
-#### 4.1 Skill（312 个）
+#### 5.1 Skill（312 个）
 
 | # | 技能 | 分类 | 用途 | 源仓库 |
 |---:|---|---|---|---|
@@ -445,7 +578,7 @@ dispatch.cmd mcp install github          # 生成 MCP 安装方案（默认只�
 | 311 | `qutip` | 量子计算 | Quantum physics simulation library for open quantum systems. | [QuTiP](https://github.com/qutip/qutip) |
 | 312 | `liteparse` | 文档解析 | Parse, perform multi-format document conversion or spatially… | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/document-parsing/liteparse) |
 
-#### 4.2 MCP 连接器（6 个）
+#### 5.2 MCP 连接器（6 个）
 
 | # | 连接器 | 提供方 | 源仓库 |
 |---:|---|---|---|
@@ -461,7 +594,7 @@ dispatch.cmd mcp install github          # 生成 MCP 安装方案（默认只�
 
 <a id="致谢"></a>
 
-### 五、致谢
+### 六、致谢
 
 这份清单能成立，是因为有大量人和项目把东西无偿开放了出来。
 
@@ -497,7 +630,7 @@ Peter Williams（algorithm / algorithmic）、Hal Daumé III、Norman Gray（url
 
 <a id="许可"></a>
 
-### 六、开源许可证
+### 七、开源许可证
 
 本仓库整体以 **Apache-2.0** 分发，共四份许可与署名文件：
 
@@ -629,17 +762,111 @@ dispatch.cmd load scanpy                          # load the full methodology
 dispatch.cmd mcp install github                   # print an install plan (dry run by default)
 ```
 
-### 3. Scale
+### 3. How to install and use it (no coding required)
+
+Written for people who don't program. **No coding, no GPU.**
+
+| Term | In plain words | What you do |
+|---|---|---|
+| **AI Agent platform** | The chat box you already use (WorkBuddy here; any skill-capable platform works similarly) | Have it installed |
+| **Skill** | A pack of research methodology the AI only opens when your question calls for it | Drop the folder in the right place |
+
+**Install in three steps**
+
+1. **Download** — on this repo page click **Clone/Download → Download ZIP** (~7 MB).
+2. **Find the skills directory**
+   - Windows: press `Win + R`, paste `%USERPROFILE%\.workbuddy\skills`, press Enter
+   - macOS: Finder → Go → Go to Folder → `~/.workbuddy/skills`
+   - If it does not exist, create `.workbuddy` and then `skills` inside it — keep the leading dot.
+   - On another platform, substitute that platform's skills directory.
+3. **Extract into it** — rename the extracted `open-science-dispatcher-main` folder to
+   `openscience-dispatcher`, then move it inside `skills`. The layout must be exactly:
+
+```
+skills
+└── openscience-dispatcher
+    ├── SKILL.md          ← must sit at this level
+    ├── dispatch.cmd
+    ├── registry.json
+    ├── skills\           ← the 312 sub-skills
+    ├── mcp\
+    └── tools\
+```
+
+> **Windows users**: the retrieval script needs Python 3.8+. If you don't have it, install Python
+> from the Microsoft Store (free, about a minute) and restart the chat. macOS ships with it.
+
+**Check it worked** — open a new chat and ask:
+
+> Using OpenScience, find the evidence on metformin and cardiovascular outcomes
+
+If the answer names sub-skills such as `pubmed-database` or `literature-review`, you are set.
+If nothing happens, it is almost always the folder nesting.
+
+**Day to day: just talk**
+
+No commands to memorise. Treat it as a colleague who knows research methodology and the
+tooling, and state four things clearly:
+
+| Be clear about | Weak ask | Better ask |
+|---|---|---|
+| **Who you are** | "Write me a paper" | "I'm a medical undergraduate, I've never written a review" |
+| **The exact question** | "Look into diabetes" | "Effect of metformin on cardiovascular outcomes in type 2 diabetes" |
+| **What you have** | (unstated) | "I only have library PubMed access, no raw data" |
+| **What you want back** | "Tidy it up" | "A DOI-linked reference list plus a data-extraction table" |
+
+**Worked example — a small clinical research task**
+
+> **Setting**: you are a medical undergraduate; your supervisor wants you in three days to present
+> the evidence on metformin and cardiovascular outcomes in type 2 diabetes. You have never done an
+> evidence review.
+
+1. **Get the evidence** — "I'm a medical undergraduate presenting on metformin and cardiovascular
+   outcomes in T2DM. Search the last 10 years of RCTs and meta-analyses, adult MACE endpoints only,
+   and give me a DOI-linked list."
+   *Behind the scenes:* `pubmed-database` queries PubMed, `literature-review` applies
+   inclusion/exclusion criteria, `citation-management` formats citations.
+2. **Turn evidence into a table** — "Extract these studies into one table: study, year, sample size,
+   follow-up, primary endpoint, effect size (HR and 95% CI)."
+3. **Fix the methodology (where most people go wrong)** — "The endpoint definitions differ — can
+   these be pooled? How do I judge heterogeneity? Fixed- or random-effects? If pooling isn't valid,
+   how should I structure the talk?"
+   *Behind the scenes:* `statistical-analysis`, `scientific-critical-thinking`. This step separates
+   AI that helps from AI that produces polished but unsound conclusions.
+4. **Draft it** — "Write this up as an 8-page report: background, methods, results, discussion,
+   limitations, references in Vancouver style." (`scientific-writing`, `citation-management`)
+5. **Self-audit (strongly recommended)** — "Check every sentence: each claim must trace to a
+   specific study in that list. Flag anything unsupported." (`verify`, `sources`, `peer-review`)
+   This is what filters out confident-sounding fabrication.
+
+**Going further**: real cases → `clinical-reports`; prospective study design →
+`scientific-problem-selection`; journal submission → `venue-templates`.
+
+**FAQ**
+
+- **Nothing happens?** Check the nesting — it must be `skills\openscience-dispatcher\SKILL.md`.
+- **Need internet?** Retrieval skills (PubMed, ClinicalTrials, UniProt) do; methodology-only skills
+  work offline.
+- **Any cost?** The skills are free (Apache-2.0). Only cloud-GPU skills such as `runpod-gpu-cloud`
+  cost money, and they print a plan rather than ordering by default.
+- **Will it touch my files or spin up paid resources?** No — MCP writes are dry-run unless you pass
+  `--write` (with automatic backup), and cloud actions ask for confirmation first.
+- **Do I need Python?** The retrieval script `dispatch.py` needs Python 3.8+ (Microsoft Store on
+  Windows, built in on macOS). Without it the agent can still browse the skill folder directly,
+  just with less precise keyword retrieval.
+- **Uninstall?** Delete `skills\openscience-dispatcher`. Nothing else is left behind.
+
+### 4. Scale
 
 **312 skills across 16 categories + 6 MCP connectors.**
 Of these, 243 wrap a concrete open-source project and 69 are
 OpenScience's own methodology / workflow skills.
 
 The per-skill inventory with source-repository links lives in
-[§4.1 above](#inventory) — it is generated from `registry.json` and `tools/sources.py`,
+[§5.1 above](#inventory) — it is generated from `registry.json` and `tools/sources.py`,
 and every link is HTTP-verified.
 
-### 4. Acknowledgements
+### 5. Acknowledgements
 
 Above all, **[OpenScience](https://github.com/synthetic-sciences/openscience)** (Synthetic Sciences /
 InkVell Inc.) — all 312 sub-skills, the MCP catalogue and the research-agent architecture
@@ -654,7 +881,7 @@ to the LaTeX package authors (Patrick W Daly, Piet van Oostrum, Peter Williams, 
 Norman Gray) and venue template maintainers, and to every MCP provider
 (San Francisco Compute, GitHub, Benchling, Box, Dropbox, AWS).
 
-### 5. License
+### 6. License
 
 Distributed under **Apache-2.0**. See [`LICENSE`](LICENSE), [`NOTICE`](NOTICE),
 [`ATTRIBUTION.md`](ATTRIBUTION.md) and [`THIRD-PARTY-NOTICES.md`](THIRD-PARTY-NOTICES.md).
