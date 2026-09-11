@@ -148,7 +148,8 @@ def main():
         print(f"校验通过：{len(reg)} skills / {len(cnt)} categories / {len(MCP)} MCP")
         print(f"  自研 {selfmade} · 依托第三方项目 {len(reg) - selfmade}")
         return
-    (ROOT / "README.md").write_text(doc, encoding="utf-8")
+    with open(ROOT / "README.md", "w", encoding="utf-8", newline="\n") as f:
+        f.write(doc)
     print(f"已写出 README.md：{len(doc)} 字符 / {len(doc.encode('utf-8'))} 字节")
     print(f"  {len(reg)} 个 skill（自研 {selfmade} · 第三方 {len(reg) - selfmade}） · {len(MCP)} 个 MCP")
 
