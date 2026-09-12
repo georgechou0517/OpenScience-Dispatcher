@@ -43,12 +43,27 @@
 
 它把 OpenScience 沉淀的科研方法论与工具链，变成你 Agent 里随时可调的能力。按典型场景：
 
-**1. 从零开始写一篇论文**
-从选题、文献综述、方法、结果到讨论，全部有对应子技能：
-`scientific-writing`（段落级写作规范）、`literature-review`（含 PRISMA 系统综述）、
-`citation-management`（Google Scholar / PubMed 检索与引文抽取）、`ml-paper-writing`、
-`venue-templates`（各会议/期刊 LaTeX 模板与投稿要求）、`latex-posters`、`pptx-posters`、
-`scientific-slides`、`paper-2-web`（论文转网页/海报/视频）。
+**1. 从零开始写一篇论文（主打功能）**
+这条路径已固化成**端到端工作流**，不是零散工具堆叠。给一个题目，它先问清楚必要信息，再按十个阶段推进，
+每阶段结束用人话交代做了什么、为什么、结果说明什么：
+
+| 阶段 | 做什么 | 你拿到的产物 |
+|---|---|---|
+| 0 信息采集 | 分轮提问（每轮 ≤4 问），把题目变成可研究的问题（PICO） | 研究简报 |
+| 1 可行性查证 | 确认有没有人做过同题研究，确定你的差异点 | 新颖性论证 |
+| 2 检索 | 构造可复现的检索式，抓取原始文献记录 | 检索策略 + 原始记录 |
+| 3 筛选 | 去重 → 标题摘要筛 → 全文筛（PRISMA 规范） | 筛选表 + 流程图数据 |
+| 4 提取 | 提取研究数据 + 偏倚风险评价（Cochrane RoB / NOS） | 数据提取表 |
+| 5 统计 | 效应量合并、异质性、亚组、敏感性、发表偏倚 | 统计脚本 + 结果文件 |
+| 6 图表 | 森林图、漏斗图、PRISMA 流程图（全部程序化生成） | 300 dpi 图 |
+| 7 写作 | IMRaD 结构英文稿 + 可解析的参考文献 | 稿件 + BibTeX |
+| 8 审计 | 引用逐条解析、数字回溯、主张核验、模拟同行评审 | 反造假审计报告 |
+| 9 投稿 | 目标期刊推荐、格式排版、Cover Letter | 投稿材料 |
+
+**六条铁律**：绝不编造文献、绝不编造数据、先查证再动笔、全程留痕、每步说人话、不确定就问。
+支撑它的子技能包括 `scientific-writing`、`literature-review`（含 PRISMA）、`citation-management`、
+`statistical-analysis`、`pubmed-database`、`matplotlib`、`verify` / `sources` / `peer-review` 等。
+完整定义见 `workflows/sci-paper.md`，或运行 `dispatch.cmd workflow show sci-paper`。
 
 **2. 设计实验与分析数据**
 `statistical-analysis`（检验选择与报告）、`pymc-bayesian-modeling`（贝叶斯建模）、
@@ -88,6 +103,7 @@
 **怎么用**：直接用自然语言提问即可，调度器会检索命中的子技能并载入其正文；需要真的动手时，再按需安装 MCP。
 
 ```bash
+dispatch.cmd workflow show sci-paper     # 读取「从零写 SCI 论文」完整工作流
 dispatch.cmd query "单细胞 降维 聚类"      # 检索能力
 dispatch.cmd load scanpy                 # 载入该子技能的完整方法论
 dispatch.cmd mcp install github          # 生成 MCP 安装方案（默认只看不写）
@@ -756,7 +772,15 @@ Worse: a general-purpose LLM without methodological constraints will happily pro
 | **Compute without bill shock** | `skypilot-multi-cloud-orchestration`, `modal-serverless-gpu`, `runpod-gpu-cloud`, `vast-ai-gpu-cloud`, `lambda-gpu-cloud` + on-demand MCP |
 | **Reproducible delivery** | `iso-13485-certification`, `research-grants`, `get-available-resources` |
 
+**Flagship workflow — write a SCI paper from scratch.** A fixed ten-stage pipeline, not a bag of tools:
+ask first (Stage 0 collects PICO and picks the route), then verify novelty, retrieve, screen to PRISMA,
+extract, analyse, plot, draft in IMRaD, audit every citation and number, and finally prepare the submission.
+Six non-negotiable rules run throughout: never invent a reference, never invent a number, verify before
+writing, keep everything reproducible, explain each step in plain language, ask when unsure.
+Full definition in `workflows/sci-paper.md`.
+
 ```bash
+dispatch.cmd workflow show sci-paper               # read the full SCI-paper workflow
 dispatch.cmd query "single cell RNA integration"   # retrieve capability
 dispatch.cmd load scanpy                          # load the full methodology
 dispatch.cmd mcp install github                   # print an install plan (dry run by default)

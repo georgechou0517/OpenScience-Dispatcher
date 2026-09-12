@@ -26,6 +26,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent
 SKILLS = ROOT / "skills"
 MCP_DIR = ROOT / "mcp"
+WORKFLOWS = ROOT / "workflows"
 
 # Override the MCP client config location with this environment variable.
 MCP_CONFIG_ENV = "OSD_MCP_CONFIG"
@@ -39,6 +40,8 @@ except Exception:
 
 WORD = re.compile(r"[a-z0-9][a-z0-9+#._-]*")
 CJK = re.compile(r"[\u4e00-\u9fff]+")
+# Separators used for word-boundary comparison inside a haystack.
+SEP = re.compile(r"[^a-z0-9]+")
 
 # Upstream skill names and descriptions are English-first, so a Chinese query needs
 # term expansion before scoring. Longest match wins.
@@ -66,6 +69,32 @@ CN_TERMS = {
     "云端": "cloud", "算力": "gpu compute", "显卡": "gpu", "存储": "storage",
     "无服务器": "serverless", "化学": "chemistry", "生物": "biology",
     "文档": "document", "解析": "parsing", "医学": "medical",
+    # --- 科研通用 / SCI 论文场景（临床与循证术语）---
+    # Only compound phrases here: a bare "分析" -> "analysis" mapping is far too
+    # broad and lifts every *-analysis skill above the actually relevant ones.
+    "系统综述": "systematic review", "系统评价": "systematic review",
+    "荟萃分析": "meta-analysis", "元分析": "meta-analysis",
+    "meta分析": "meta-analysis", "meta 分析": "meta-analysis",
+    "统计分析": "statistical analysis", "数据分析": "data analysis",
+    "文献检索": "literature search", "研究设计": "study design",
+    "研究进展": "research progress",
+    "随机对照": "randomized controlled trial", "队列研究": "cohort study",
+    "病例对照": "case-control", "横断面": "cross-sectional",
+    "纳入": "inclusion", "排除": "exclusion", "筛选": "screening",
+    "数据提取": "data extraction", "提取": "extraction",
+    "森林图": "forest plot", "漏斗图": "funnel plot", "流程图": "flow diagram",
+    "异质性": "heterogeneity", "发表偏倚": "publication bias", "偏倚": "risk of bias",
+    "效应量": "effect size", "置信区间": "confidence interval",
+    "比值比": "odds ratio", "风险比": "hazard ratio", "相对危险度": "relative risk",
+    "敏感性分析": "sensitivity analysis", "亚组分析": "subgroup analysis",
+    "生存分析": "survival analysis", "回归": "regression",
+    "统计": "statistics", "显著性": "significance", "样本量": "sample size",
+    "随访": "follow-up", "结局": "outcome",
+    "检索式": "search strategy", "主题词": "mesh", "摘要": "abstract",
+    "投稿": "submission", "期刊": "journal", "影响因子": "impact factor",
+    "审稿": "peer review", "返修": "revision",
+    "糖尿病": "diabetes", "心血管": "cardiovascular", "二甲双胍": "metformin",
+    "预后": "prognosis", "临床试验": "clinical trial",
 }
 
 MIRRORS = {
@@ -87,8 +116,14 @@ MIRRORS = {
 
 
 def expand(q):
-    """Append English equivalents for any Chinese term found in the query."""
-    keys = sorted((k for k in CN_TERMS if k in q), key=len, reverse=True)
+    """Append English equivalents for any Chinese term found in the query.
+
+    Matching is case-insensitive, so "Meta 分析" resolves as well. The returned
+    phrase list lets the scorer weight a whole-phrase hit above the loose
+    individual words that phrase happens to contain.
+    """
+    low = q.lower()
+    keys = sorted((k for k in CN_TERMS if k in low), key=len, reverse=True)
     used, extra = set(), []
     for k in keys:
         if any(k in u for u in used):
@@ -105,6 +140,34 @@ def registry():
 
 def catalog():
     return json.loads((MCP_DIR / "catalog.json").read_text(encoding="utf-8"))
+
+
+def workflows():
+    """Scan workflows/*.md.
+
+    Metadata is read from the file itself, so adding a workflow needs no registry
+    update: the H1 line supplies the title, the first blockquote supplies the summary.
+    """
+    rows = []
+    if not WORKFLOWS.is_dir():
+        return rows
+    for f in sorted(WORKFLOWS.glob("*.md")):
+        title, summary = "", ""
+        try:
+            lines = f.read_text(encoding="utf-8").splitlines()
+        except OSError:
+            lines = []
+        for ln in lines:
+            s = ln.strip()
+            if not title and s.startswith("# ") and not s.startswith("## "):
+                title = re.sub(r"^Workflow:\s*\S+\s*", "", s[2:].strip()).lstrip("—-– ").strip()
+                continue
+            if s.startswith(">") and not summary:
+                summary = s.lstrip("> ").strip()
+            if title and summary:
+                break
+        rows.append({"id": f.stem, "title": title or f.stem, "summary": summary, "path": f})
+    return rows
 
 
 def resolve_mcp_config(override=None):
@@ -130,7 +193,17 @@ def find_skill(name):
 
 
 # ------------------------------------------------------------------------ score
-def score(e, q):
+def words(text):
+    """Lowercase word set; treats - _ . / and spaces as separators.
+
+    Whole-word comparison replaces substring matching, which made short query
+    tokens collide across unrelated skills: querying "meta" matched "metabolomics",
+    "metadata" and Meta-the-company, drowning out the actual meta-analysis skills.
+    """
+    return {w for w in SEP.split(text.lower()) if w}
+
+
+def score(e, q, phrases=()):
     ql = q.strip().lower()
     if not ql:
         return 0.0
@@ -140,6 +213,12 @@ def score(e, q):
     func = (e.get("functionality") or "").lower()
     cat = (e.get("category") or "").lower()
     hay = " ".join([name, desc, func, cat, " ".join(tags)])
+
+    name_w = words(name)
+    desc_w = words(desc)
+    func_w = words(func)
+    cat_w = words(cat)
+    tag_w = words(" ".join(tags))
 
     s = 0.0
     if ql == name:
@@ -157,19 +236,36 @@ def score(e, q):
             continue
         if t == name:
             s += 30
-        elif t in name:
+        elif t in name_w:
             s += 14
-        if t in tags:
+        if t in tag_w:
             s += 12
-        if t in desc:
+        if t in desc_w:
             s += 5
-        if t in func:
+        if t in func_w:
             s += 3
-        if t in cat:
+        if t in cat_w:
             s += 2
     for c in CJK.findall(ql):
         if c in hay:
             s += 10
+
+    # A whole-phrase hit is far stronger evidence of intent than the loose words it
+    # contains: "meta-analysis" must outrank any skill merely named "*-analysis".
+    for p in phrases:
+        pw = words(p)
+        if not pw:
+            continue
+        if pw <= name_w:
+            s += 50
+        elif pw <= tag_w:
+            s += 30
+        elif pw <= desc_w:
+            s += 25
+        elif pw <= func_w:
+            s += 15
+        elif pw <= (name_w | tag_w | desc_w | func_w | cat_w):
+            s += 8
     return s
 
 
@@ -348,7 +444,7 @@ def cmd_query(a):
     if a.category:
         rows = [e for e in rows if e["category"].lower() == a.category.lower()]
     q, extra = expand(a.text)
-    ranked = sorted(((score(e, q), e) for e in rows), key=lambda x: -x[0])
+    ranked = sorted(((score(e, q, extra), e) for e in rows), key=lambda x: -x[0])
     hits = [(s, e) for s, e in ranked if s > 0][: a.top]
     if a.json:
         print(json.dumps([{**e, "score": round(s, 1)} for s, e in hits], ensure_ascii=False, indent=1))
@@ -478,6 +574,35 @@ def cmd_net(a):
     print("\n覆盖方式: 设置环境变量 OPENSCIENCE_REGION=CN 或 INTL")
 
 
+def cmd_workflow(a):
+    rows = workflows()
+    if a.action == "show":
+        if not a.id:
+            print("请指定工作流 id，例如: dispatch.py workflow show sci-paper")
+            if rows:
+                print("可用: " + ", ".join(r["id"] for r in rows))
+            return
+        key = a.id.strip().lower()
+        hit = next((r for r in rows if r["id"].lower() == key), None)
+        if not hit:
+            print(f"未找到工作流: {a.id}")
+            if rows:
+                print("可用: " + ", ".join(r["id"] for r in rows))
+            return
+        print(hit["path"].read_text(encoding="utf-8"), end="")
+        return
+
+    if not rows:
+        print("未找到工作流定义（workflows/ 目录为空）。")
+        return
+    print(f"可用工作流（{len(rows)}）:\n")
+    for r in rows:
+        print(f"  {r['id']:<14} {r['title']}")
+        if r["summary"]:
+            print(f"  {'':<14} {r['summary'][:96]}")
+    print("\n查看全文: dispatch.py workflow show <id>")
+
+
 def main():
     p = argparse.ArgumentParser(
         prog="dispatch",
@@ -515,6 +640,11 @@ def main():
 
     s = sub.add_parser("net", help="显示网络区域判定与镜像源映射")
     s.set_defaults(fn=cmd_net)
+
+    s = sub.add_parser("workflow", help="端到端科研工作流（列阶段、门控与产物）")
+    s.add_argument("action", nargs="?", default="list", choices=["list", "show"])
+    s.add_argument("id", nargs="?", help="工作流 id，配合 show 使用")
+    s.set_defaults(fn=cmd_workflow)
 
     a = p.parse_args()
     a.fn(a)
