@@ -23,12 +23,12 @@ from lifelines import CoxPHFitter, KaplanMeierFitter
 from lifelines.statistics import logrank_test, multivariate_logrank_test
 
 
-def load_survival_data(filepath):
+def load_survival_data(filepath, time_col='time', event_col='event', group_col='group'):
     """
     Load survival data from CSV file.
 
-    Expected columns:
-    - patient_id: Unique patient identifier
+    Expected columns (names configurable via --time-col / --event-col / --group-col):
+    - patient_id: Unique patient identifier (optional, not used downstream)
     - time: Survival time (months or days)
     - event: Event indicator (1=event occurred, 0=censored)
     - group: Stratification variable (e.g., 'Biomarker+', 'Biomarker-')
@@ -39,31 +39,56 @@ def load_survival_data(filepath):
     """
     df = pd.read_csv(filepath)
 
-    # Validate required columns
-    required_cols = ['patient_id', 'time', 'event', 'group']
+    # Validate required columns. patient_id is deliberately NOT required: it is
+    # never used downstream, yet demanding it rejected otherwise valid CSVs.
+    required_cols = [time_col, event_col, group_col]
     missing = [col for col in required_cols if col not in df.columns]
     if missing:
-        raise ValueError(f"Missing required columns: {missing}")
+        raise ValueError(f"Missing required columns: {missing}. Present columns: {list(df.columns)}")
 
     # Convert event to boolean if needed
-    df['event'] = df['event'].astype(bool)
+    df[event_col] = df[event_col].astype(bool)
 
     return df
 
 
 def calculate_median_survival(kmf):
-    """Calculate median survival with 95% CI."""
-    median = kmf.median_survival_time_
-    ci = kmf.confidence_interval_survival_function_
+    """Median survival time with its 95% confidence interval.
 
-    # Find time when survival crosses 0.5
-    if median == np.inf:
+    The interval is the Brookmeyer-Crowley one: its limits are the times at
+    which the confidence *bands* for S(t) cross 0.5. Those limits carry the
+    time unit of the x axis, which is what manuscripts report.
+
+    Two upstream defects are corrected here:
+      1. The confidence-interval column names follow the fitted label. Without
+         a label they are "KM_estimate_lower_0.95" / "KM_estimate_upper_0.95",
+         but passing `label=` makes lifelines rename them to
+         "<label>_lower_0.95" / "<label>_upper_0.95". Hard-coding the
+         "KM_estimate_*" form raised KeyError on every labelled fit.
+      2. The old code read the confidence limits of the survival *probability*
+         S(t) at the median (about 0.4-0.6) and reported them as the CI of the
+         median *time* ("95% CI 0.4-0.6 months"), which is a different quantity
+         and meaningless as a time interval.
+    """
+    median = kmf.median_survival_time_
+    if median is None or not np.isfinite(median):
         return None, None, None
 
-    # Get CI at median
-    idx = np.argmin(np.abs(kmf.survival_function_.index - median))
-    lower_ci = ci.iloc[idx]['KM_estimate_lower_0.95']
-    upper_ci = ci.iloc[idx]['KM_estimate_upper_0.95']
+    ci = kmf.confidence_interval_survival_function_
+    lower_col = next((c for c in ci.columns if "lower" in str(c)), None)
+    upper_col = next((c for c in ci.columns if "upper" in str(c)), None)
+    if lower_col is None or upper_col is None:
+        return median, None, None
+
+    def crossing_time(band, level=0.5):
+        """First time the step band drops to or below `level`, else None."""
+        hits = np.where(np.asarray(band, dtype=float) <= level)[0]
+        return float(ci.index[hits[0]]) if len(hits) else None
+
+    # The pessimistic (lower) band reaches 0.5 first -> lower time limit;
+    # the optimistic (upper) band reaches it last -> upper time limit.
+    lower_ci = crossing_time(ci[lower_col])
+    upper_ci = crossing_time(ci[upper_col])
 
     return median, lower_ci, upper_ci
 
@@ -137,7 +162,7 @@ def generate_kaplan_meier_plot(
         # Add log-rank test result to plot
         ax.text(
             0.02,
-            0.15,
+            0.97,
             f'Log-rank test:\np = {p_value:.4f}',
             transform=ax.transAxes,
             fontsize=10,
@@ -152,7 +177,7 @@ def generate_kaplan_meier_plot(
 
         ax.text(
             0.02,
-            0.15,
+            0.97,
             f'Log-rank test:\np = {p_value:.4f}\n({len(groups)} groups)',
             transform=ax.transAxes,
             fontsize=10,
@@ -163,7 +188,7 @@ def generate_kaplan_meier_plot(
     # Add median survival annotations
     y_pos = 0.95
     for group, (median, lower, upper) in median_survivals.items():
-        if median is not None:
+        if median is not None and lower is not None and upper is not None:
             ax.text(
                 0.98,
                 y_pos,
@@ -277,7 +302,10 @@ def calculate_hazard_ratio(data, time_col='time', event_col='event', group_col='
     return hr, ci[0], ci[1], p_value
 
 
-def generate_report(data, output_dir, prefix='survival'):
+def generate_report(data, output_dir, prefix='survival',
+                    title='Survival Analysis by Group',
+                    xlabel='Time (months)', ylabel='Survival Probability',
+                    time_col='time', event_col='event', group_col='group'):
     """
     Generate comprehensive survival analysis report.
 
@@ -286,6 +314,10 @@ def generate_report(data, output_dir, prefix='survival'):
     - Number at risk table (CSV)
     - Statistical summary (TXT)
     - LaTeX table code (TEX)
+
+    All plotting labels and column names are forwarded so the CLI flags
+    (-t/-x/-y/--time-col/--event-col/--group-col) actually take effect; the
+    original version hard-coded them and silently ignored every flag.
     """
 
     output_dir = Path(output_dir)
@@ -293,22 +325,33 @@ def generate_report(data, output_dir, prefix='survival'):
 
     # Generate survival curve
     kmf_models, logrank_p = generate_kaplan_meier_plot(
-        data, output_path=output_dir / f'{prefix}_kaplan_meier.pdf', title='Survival Analysis by Group'
+        data,
+        time_col=time_col,
+        event_col=event_col,
+        group_col=group_col,
+        output_path=output_dir / f'{prefix}_kaplan_meier.pdf',
+        title=title,
+        xlabel=xlabel,
+        ylabel=ylabel,
     )
 
     # Number at risk table
-    risk_table = generate_number_at_risk_table(data)
+    risk_table = generate_number_at_risk_table(
+        data, time_col=time_col, event_col=event_col, group_col=group_col
+    )
     risk_table.to_csv(output_dir / f'{prefix}_number_at_risk.csv')
 
     # Calculate hazard ratio
-    hr, ci_lower, ci_upper, hr_p = calculate_hazard_ratio(data)
+    hr, ci_lower, ci_upper, hr_p = calculate_hazard_ratio(
+        data, time_col=time_col, event_col=event_col, group_col=group_col
+    )
 
     # Generate statistical summary
     with open(output_dir / f'{prefix}_statistics.txt', 'w') as f:
         f.write("SURVIVAL ANALYSIS STATISTICAL SUMMARY\n")
         f.write("=" * 60 + "\n\n")
 
-        groups = data['group'].unique()
+        groups = data[group_col].unique()
         for group in groups:
             kmf = kmf_models[group]
             median = kmf.median_survival_time_
@@ -316,14 +359,14 @@ def generate_report(data, output_dir, prefix='survival'):
             # Calculate survival rates at common time points
             try:
                 surv_12m = kmf.survival_function_at_times(12).values[0]
-                surv_24m = kmf.survival_function_at_times(24).values[0] if data['time'].max() >= 24 else None
+                surv_24m = kmf.survival_function_at_times(24).values[0] if data[time_col].max() >= 24 else None
             except:
                 surv_12m = None
                 surv_24m = None
 
             f.write(f"Group: {group}\n")
-            f.write(f"  N = {len(data[data['group'] == group])}\n")
-            f.write(f"  Events = {data[data['group'] == group]['event'].sum()}\n")
+            f.write(f"  N = {len(data[data[group_col] == group])}\n")
+            f.write(f"  Events = {data[data[group_col] == group][event_col].sum()}\n")
             f.write(
                 f"  Median survival: {median:.1f} months\n" if median != np.inf else "  Median survival: Not reached\n"
             )
@@ -343,9 +386,14 @@ def generate_report(data, output_dir, prefix='survival'):
             f.write(f"Hazard Ratio ({groups[1]} vs {groups[0]}):\n")
             f.write(f"  HR = {hr:.2f} (95% CI {ci_lower:.2f}-{ci_upper:.2f})\n")
             f.write(f"  p-value = {hr_p:.4f}\n")
-            f.write(
-                f"  Interpretation: {groups[1]} has {((1 - hr) * 100):.0f}% {'reduction' if hr < 1 else 'increase'} in risk\n"
-            )
+            # Effect size must be signed correctly: HR > 1 means MORE risk,
+            # HR < 1 means LESS risk. The previous expression (1 - hr) yielded
+            # "-48% increase in risk" for HR = 1.48.
+            if hr < 1:
+                _effect = f"{(1 - hr) * 100:.0f}% reduction in risk"
+            else:
+                _effect = f"{(hr - 1) * 100:.0f}% increase in risk"
+            f.write(f"  Interpretation: {groups[1]} has {_effect}\n")
 
     # Generate LaTeX table code
     with open(output_dir / f'{prefix}_latex_table.tex', 'w') as f:
@@ -418,12 +466,27 @@ def main():
 
     # Load data
     print(f"Loading data from {args.input_file}...")
-    data = load_survival_data(args.input_file)
+    data = load_survival_data(
+        args.input_file,
+        time_col=args.time_col,
+        event_col=args.event_col,
+        group_col=args.group_col,
+    )
     print(f"Loaded {len(data)} patients")
     print(f"Groups: {data[args.group_col].value_counts().to_dict()}")
 
     # Generate analysis
-    generate_report(data, output_dir=args.output, prefix='survival')
+    generate_report(
+        data,
+        output_dir=args.output,
+        prefix='survival',
+        title=args.title,
+        xlabel=args.xlabel,
+        ylabel=args.ylabel,
+        time_col=args.time_col,
+        event_col=args.event_col,
+        group_col=args.group_col,
+    )
 
 
 if __name__ == '__main__':
