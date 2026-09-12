@@ -1,0 +1,11 @@
+study,est,lo,hi,weight,subgroup,kind
+UKPDS 34 (1998),0.61,0.45,0.83,15,RCT,study
+HOME (2009),0.71,0.52,0.97,9,RCT,study
+Kooy (2009),0.75,0.58,0.97,12,RCT,study
+SPREAD (2013),0.85,0.60,1.20,6,RCT,study
+Subtotal (RCT),0.69,0.59,0.81,,RCT,pooled
+ADOPT (2004),0.91,0.77,1.08,22,Observational,study
+RECORD (2009),0.84,0.71,0.99,26,Observational,study
+UKPDS 34 ext (2021),0.67,0.50,0.90,11,Observational,study
+Subtotal (Observational),0.85,0.75,0.96,,Observational,pooled
+Overall (random),0.79,0.71,0.88,,,pooled

@@ -118,19 +118,23 @@ MIRRORS = {
 def expand(q):
     """Append English equivalents for any Chinese term found in the query.
 
-    Matching is case-insensitive, so "Meta 分析" resolves as well. The returned
-    phrase list lets the scorer weight a whole-phrase hit above the loose
-    individual words that phrase happens to contain.
+    Matching is case-insensitive, so "Meta 分析" resolves as well. Three lists come
+    back: the augmented query, the inferred English phrases, and the Chinese terms the
+    user actually typed. Keeping the last two apart matters — an inferred English word
+    must not outrank a phrase the skill itself declares as a trigger.
     """
     low = q.lower()
     keys = sorted((k for k in CN_TERMS if k in low), key=len, reverse=True)
-    used, extra = set(), []
+    used, extra = [], []
     for k in keys:
         if any(k in u for u in used):
             continue
-        used.add(k)
+        used.append(k)
         extra.append(CN_TERMS[k])
-    return q + (" " + " ".join(extra) if extra else ""), extra
+    # The Chinese keys are kept in full, including sub-terms: if the query says
+    # "文献检索" then "文献" and "检索" are genuinely in it too, and those shorter
+    # terms are what the skills actually declare as triggers.
+    return q + (" " + " ".join(extra) if extra else ""), extra, list(keys)
 
 
 # --------------------------------------------------------------------------- io
@@ -203,7 +207,7 @@ def words(text):
     return {w for w in SEP.split(text.lower()) if w}
 
 
-def score(e, q, phrases=()):
+def score(e, q, phrases=(), cn_phrases=()):
     ql = q.strip().lower()
     if not ql:
         return 0.0
@@ -212,13 +216,14 @@ def score(e, q, phrases=()):
     desc = (e.get("description") or "").lower()
     func = (e.get("functionality") or "").lower()
     cat = (e.get("category") or "").lower()
-    hay = " ".join([name, desc, func, cat, " ".join(tags)])
+    tag_join = " ".join(tags)
+    hay = " ".join([name, desc, func, cat, tag_join])
 
     name_w = words(name)
     desc_w = words(desc)
     func_w = words(func)
     cat_w = words(cat)
-    tag_w = words(" ".join(tags))
+    tag_w = words(tag_join)
 
     s = 0.0
     if ql == name:
@@ -250,22 +255,55 @@ def score(e, q, phrases=()):
         if c in hay:
             s += 10
 
-    # A whole-phrase hit is far stronger evidence of intent than the loose words it
-    # contains: "meta-analysis" must outrank any skill merely named "*-analysis".
+    # Inferred English phrases are discounted twice over: the user never wrote these
+    # words (we translated them), and a one-word "phrase" is really just a token that
+    # the token loop above already scored. Left undiscounted, any skill whose *name*
+    # happens to contain the translation outranks the skill that declares the user's
+    # Chinese trigger — "PubMed 检索" used to return qdrant-vector-search first.
     for p in phrases:
         pw = words(p)
         if not pw:
             continue
+        spec = min(1.0, 0.35 * len(pw))
         if pw <= name_w:
-            s += 50
+            s += 50 * spec
         elif pw <= tag_w:
-            s += 30
+            s += 30 * spec
         elif pw <= desc_w:
-            s += 25
+            s += 25 * spec
         elif pw <= func_w:
-            s += 15
+            s += 15 * spec
         elif pw <= (name_w | tag_w | desc_w | func_w | cat_w):
-            s += 8
+            s += 8 * spec
+
+    # Chinese terms are the user's own words, so they are not discounted, and the
+    # weight scales with term length: Chinese is dense, so a 4-character term matching
+    # a description is far stronger evidence than a 2-character one that merely happens
+    # to be a substring ("投稿" is inside "投稿级").
+    #
+    # Tags are graded, because Chinese has no word boundaries: an exact tag means the
+    # skill declares that very phrase ("样本量"), while a tag that merely *contains* the
+    # term is far weaker ("文献" inside "文献综述"). Scoring both the same made
+    # literature-review outrank the user's own search skill for "我要找文献".
+    for p in cn_phrases:
+        n = len(p)
+        if p in name:
+            s += 28 + 8 * n
+        elif p in tags:
+            s += 24 + 8 * n
+        elif p in tag_join:
+            s += 6 + 3 * n
+        elif p in desc:
+            s += 4 + 5 * n
+        elif p in func:
+            s += 3 + 3 * n
+        elif p in cat:
+            s += 4 + 2 * n
+    # A tag that appears verbatim in the query is the author's own activation phrase.
+    for t in tags:
+        if len(t) >= 2 and CJK.search(t) and t in ql:
+            s += min(60, 15 * len(CJK.findall(t)[0]) if CJK.findall(t) else 0)
+
     return s
 
 
@@ -322,6 +360,16 @@ def detect_region(timeout=4.0):
 
 
 # -------------------------------------------------------------------------- mcp
+def has_placeholder(cfg):
+    """True when a generated config still carries an unsubstituted <...> path.
+
+    Writing such a config would produce a server that can never start, so the
+    installer refuses instead of leaving a silently broken entry behind.
+    """
+    blob = " ".join([str(cfg.get("command", ""))] + [str(x) for x in cfg.get("args", [])])
+    return "<" in blob or ">" in blob
+
+
 def mcp_plan(entry, region):
     m = MIRRORS[region]
     setup = entry.get("setup")
@@ -352,9 +400,21 @@ def mcp_plan(entry, region):
         lines += [
             "安装类型: 本地进程（需下载）",
             f"命令: {cfg['command']} {' '.join(cfg['args'])}",
+        ]
+        steps = entry.get("install_steps") or []
+        if steps:
+            lines += ["", "安装步骤:"]
+            lines += [f"  {i}. {s}" for i, s in enumerate(steps, 1)]
+        if has_placeholder(cfg):
+            lines += ["", "⚠️ 上面的命令含占位符（<...>），**必须先替换成你机器上的真实路径**再写入配置。"]
+        lines += [
             "",
             "按网络区域选择下载源:",
             f"  npm registry → {m['npm']}",
+            f"  PyPI         → {m['pypi']}",
+            f"  GitHub       → {m['github']}",
+            "",
+            "MCP 客户端配置片段:",
             json.dumps({"mcpServers": {server: cfg}}, ensure_ascii=False, indent=2),
         ]
     else:
@@ -443,8 +503,8 @@ def cmd_query(a):
     rows = registry()
     if a.category:
         rows = [e for e in rows if e["category"].lower() == a.category.lower()]
-    q, extra = expand(a.text)
-    ranked = sorted(((score(e, q, extra), e) for e in rows), key=lambda x: -x[0])
+    q, extra, cn = expand(a.text)
+    ranked = sorted(((score(e, q, extra, cn), e) for e in rows), key=lambda x: -x[0])
     hits = [(s, e) for s, e in ranked if s > 0][: a.top]
     if a.json:
         print(json.dumps([{**e, "score": round(s, 1)} for s, e in hits], ensure_ascii=False, indent=1))
@@ -545,6 +605,10 @@ def cmd_mcp(a):
                 cfg = {"command": setup.get("command", ""), "args": setup.get("args", [])}
             else:
                 print("\n该连接器无已审端点，无法自动写入；请按上面步骤手工登记。")
+                return
+            if has_placeholder(cfg):
+                print("\n配置里还有未替换的占位符（<...>），拒绝写入——")
+                print("写进去只会得到一个永远连不上的服务器。请先确认真实路径再登记。")
                 return
             path = write_mcp(server, cfg, target)
             print(f"\n已写入 {path} → mcpServers.{server}")

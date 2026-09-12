@@ -1,14 +1,15 @@
 # OpenScience Dispatcher · 科研综合调度技能
 
-> 把 [OpenScience](https://github.com/synthetic-sciences/openscience) 的 **312 个科研子技能**与
-> **6 个 MCP 连接器**，装进 WorkBuddy 等通用 AI Agent 平台。
+> 把 [OpenScience](https://github.com/synthetic-sciences/openscience) 的 **314 个科研子技能**与
+> **7 个 MCP 连接器**，装进 WorkBuddy 等通用 AI Agent 平台。
+> 其中 2 个技能是本包在前述基础上自行扩展的（见 §5.3）。
 > 子技能是「能力」，MCP 是「工具」，调度器负责把它们路由到你的问题上去。
 
 [中文](#中文) · [English](#english)
 
 <div align="center">
 
-`312` Skills · `16` Categories · `6` MCP Connectors · Apache-2.0 · Python 3.8+ · 零依赖
+`314` Skills · `16` Categories · `7` MCP Connectors · Apache-2.0 · Python 3.8+ · 零依赖
 
 </div>
 
@@ -156,7 +157,8 @@ skills
     ├── SKILL.md          ← 关键文件，必须在这一层
     ├── dispatch.cmd
     ├── registry.json
-    ├── skills\           ← 312 个子技能在这里
+    ├── skills\           ← 312 个上游子技能在这里
+    ├── local-skills\     ← 2 个本包自研子技能在这里
     ├── mcp\
     └── tools\
 ```
@@ -169,7 +171,7 @@ skills
 
 > 用 OpenScience 帮我查一下二甲双胍对心血管结局的证据
 
-回答里若出现 `pubmed-database`、`literature-review` 这类子技能名，就装好了。
+回答里若出现 `unified-research-finder`、`pubmed-database`、`literature-review` 这类子技能名，就装好了。
 没反应的话，九成是目录层级放错，回第 3 步对一遍。
 
 #### 3.4 日常怎么用：说人话就行
@@ -244,9 +246,9 @@ A：直接删掉 `skills\openscience-dispatcher` 文件夹，无残留。
 
 <a id="规模"></a>
 
-### 四、规模：312 个开源 skill + 6 个 MCP
+### 四、规模：314 个开源 skill + 7 个 MCP
 
-全部内容来自 OpenScience 的源码树，按 **16 个分类**组织：
+内容主要来自 OpenScience 的源码树，按 **16 个分类**组织（另 2 个为本包自研）：
 
 | 分类 | 目录 | 数量 |
 |---|---|---:|
@@ -257,27 +259,29 @@ A：直接删掉 `skills\openscience-dispatcher` 文件夹，无残留。
 | 化学 | `chemistry` | 23 |
 | 物理学 | `physics` | 23 |
 | 科学计算 | `coding` | 20 |
-| 科研流程 | `research` | 18 |
+| 科研流程 | `research` | 19 |
 | 会话与工程 | `other` | 16 |
 | 云端算力 | `cloud-compute` | 11 |
 | 数据工程 | `data-engineering` | 10 |
 | 论文写作 | `writing` | 10 |
 | 模型推理 | `ml-inference` | 9 |
-| 科学可视化 | `visualization` | 8 |
+| 科学可视化 | `visualization` | 9 |
 | 量子计算 | `quantum` | 4 |
 | 文档解析 | `document-parsing` | 1 |
-| **合计** | | **312** |
+| **合计** | | **314** |
 
 其中 243 个技能依托具体的开源项目（如 Scanpy、RDKit、vLLM、Qiskit），
-69 个是 OpenScience 原创的科研方法论与工作流技能。
+69 个是 OpenScience 原创的科研方法论与工作流技能，
+另 2 个由本包自行维护（`local-skills/`，不随上游重建覆盖，见 §5.3）。
 
-> 说明：README 上游写作「309 个内置 skills」，本清单以**源码实测**为准，实为 312 个含 `SKILL.md` 的技能目录。
+> 说明：README 上游写作「309 个内置 skills」，本清单以**源码实测**为准——上游 312 个，
+> 加本包自研 2 个，共 314 个含 `SKILL.md` 的技能目录。
 
 <a id="inventory"></a>
 
 ### 五、全部清单（含源仓库链接）
 
-#### 5.1 Skill（312 个）
+#### 5.1 Skill（314 个）
 
 | # | 技能 | 分类 | 用途 | 源仓库 |
 |---:|---|---|---|---|
@@ -523,78 +527,80 @@ A：直接删掉 `skills\openscience-dispatcher` 文件夹，无残留。
 | 240 | `scientific-critical-thinking` | 科研流程 | Evaluate research rigor. | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/research/scientific-critical-thinking) |
 | 241 | `scientific-problem-selection` | 科研流程 | When scientists need help with research problem selection,… | [Shoko-official · Claude-Science-System-Prompts](https://github.com/Shoko-official/Claude-Science-System-Prompts) |
 | 242 | `sources` | 科研流程 | Audit sources, citations, and unsupported claims using a… | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/research/sources) |
-| 243 | `verify` | 科研流程 | Run real checks for a claim, implementation, result, or… | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/research/verify) |
-| 244 | `checkpoint` | 会话与工程 | Save a local recovery packet from durable session state. | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/other/checkpoint) |
-| 245 | `compact` | 会话与工程 | Compact the current chat context into a concise summary. | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/other/compact) |
-| 246 | `context` | 会话与工程 | Show the current conversation context composition, estimated… | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/other/context) |
-| 247 | `get-available-resources` | 会话与工程 | At the start of any computationally intensive scientific task… | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/other/get-available-resources) |
-| 248 | `goal` | 会话与工程 | Set an explicit objective, success criteria, and stopping… | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/other/goal) |
-| 249 | `handoff` | 会话与工程 | Create a self-contained continuation packet for another agent. | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/other/handoff) |
-| 250 | `hugging-face-jobs` | 会话与工程 | When users want to run any workload on Hugging Face Jobs… | [huggingface_hub](https://github.com/huggingface/huggingface_hub) |
-| 251 | `hugging-face-trackio` | 会话与工程 | Track and visualize ML training experiments with Trackio. | [Trackio](https://github.com/gradio-app/trackio) |
-| 252 | `init` | 会话与工程 | Create or refresh an AGENTS.md project instruction file. | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/other/init) |
-| 253 | `iso-13485-certification` | 会话与工程 | Comprehensive toolkit for preparing ISO 13485 certification… | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/other/iso-13485-certification) |
-| 254 | `labarchive-integration` | 会话与工程 | Electronic lab notebook API integration. | [labarchives-py](https://github.com/mcmero/labarchives-py) |
-| 255 | `plan` | 会话与工程 | Enter read-only plan mode and produce a decision-ready plan. | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/other/plan) |
-| 256 | `resume` | 会话与工程 | Resume an exhausted bounded research run from its existing… | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/other/resume) |
-| 257 | `skill-installer` | 会话与工程 | Install or remove third-party openscience skills from a public… | [Anthropic Skills](https://github.com/anthropics/skills) |
-| 258 | `status` | 会话与工程 | Show live session, plan, artifact, model, and workspace state. | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/other/status) |
-| 259 | `stop` | 会话与工程 | Stop active work in the current session. | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/other/stop) |
-| 260 | `fireworks-ai-inference` | 云端算力 | Fast inference and fine-tuning platform with serverless and… | [Fireworks AI](https://github.com/fw-ai/cookbook) |
-| 261 | `givemeanode-agent-compute` | 云端算力 | Operate GiveMeANode GPU nodes, batch jobs, storage, and rollout… | [GiveMeANode](https://givemeanode.com/docs) |
-| 262 | `lambda-gpu-cloud` | 云端算力 | Safely inspect and operate Lambda Cloud GPU instances through… | [Lambda](https://lambda.ai/) |
-| 263 | `modal-serverless-gpu` | 云端算力 | Run approved CPU or GPU work through OpenScience compute_job on… | [Modal](https://github.com/modal-labs/modal-client) |
-| 264 | `runpod-gpu-cloud` | 云端算力 | Safely inspect and operate RunPod resources with runpodctl,… | [RunPod](https://github.com/runpod/runpodctl) |
-| 265 | `skypilot-multi-cloud-orchestration` | 云端算力 | Multi-cloud orchestration for ML workloads with automatic cost… | [SkyPilot](https://github.com/skypilot-org/skypilot) |
-| 266 | `tensorpool-gpu-cloud` | 云端算力 | Safely inspect and operate TensorPool GPU clusters and jobs… | [TensorPool](https://github.com/tensorpool/tensorpool) |
-| 267 | `tinker-fine-tuning` | 云端算力 | Provides guidance for fine-tuning LLMs using the Tinker cloud… | [Tinker](https://github.com/thinking-machines-lab/tinker-cookbook) |
-| 268 | `tinker-training-cost` | 云端算力 | Calculates training costs for Tinker fine-tuning jobs. | [Tinker](https://github.com/thinking-machines-lab/tinker-cookbook) |
-| 269 | `together-ai-inference` | 云端算力 | Serverless inference, fine-tuning, embeddings, image… | [Together AI](https://github.com/togethercomputer/together-python) |
-| 270 | `vast-ai-gpu-cloud` | 云端算力 | Safely inspect and operate Vast.ai marketplace instances with… | [Vast.ai](https://github.com/vast-ai/vast-python) |
-| 271 | `aeon` | 数据工程 | For time series machine learning tasks including… | [aeon](https://github.com/aeon-toolkit/aeon) |
-| 272 | `dask` | 数据工程 | Distributed computing for larger-than-RAM pandas/NumPy… | [Dask](https://github.com/dask/dask) |
-| 273 | `geopandas` | 数据工程 | Python library for working with geospatial vector data… | [GeoPandas](https://github.com/geopandas/geopandas) |
-| 274 | `hdf5-pde-data-loading` | 数据工程 | Patterns for loading PDE simulation datasets (PDEBench,… | [HDF5 / h5py](https://github.com/h5py/h5py) |
-| 275 | `hugging-face-datasets` | 数据工程 | Create and manage datasets on Hugging Face Hub. | [Datasets](https://github.com/huggingface/datasets) |
-| 276 | `markitdown` | 数据工程 | Convert files and office documents to Markdown. | [MarkItDown](https://github.com/microsoft/markitdown) |
-| 277 | `polars` | 数据工程 | Fast in-memory DataFrame library for datasets that fit in RAM. | [Polars](https://github.com/pola-rs/polars) |
-| 278 | `ray-data` | 数据工程 | Scalable data processing for ML workloads. | [Ray Data](https://github.com/ray-project/ray) |
-| 279 | `vaex` | 数据工程 | Processing and analyzing large tabular datasets (billions of… | [Vaex](https://github.com/vaexio/vaex) |
-| 280 | `zarr-python` | 数据工程 | Chunked N-D arrays for cloud storage. | [Zarr](https://github.com/zarr-developers/zarr-python) |
-| 281 | `citation-management` | 论文写作 | Comprehensive citation management for academic research. | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/writing/citation-management) |
-| 282 | `hugging-face-paper-publisher` | 论文写作 | Publish and manage research papers on Hugging Face Hub. | [huggingface_hub](https://github.com/huggingface/huggingface_hub) |
-| 283 | `latex-posters` | 论文写作 | Create professional research posters in LaTeX using… | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/writing/latex-posters) |
-| 284 | `literature-review` | 论文写作 | Answer literature-review requests with a concise,… | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/writing/literature-review) |
-| 285 | `ml-paper-writing` | 论文写作 | Write publication-ready ML/AI papers for NeurIPS, ICML, ICLR,… | [ACL Style Files](https://github.com/acl-org/acl-style-files) |
-| 286 | `paper-2-web` | 论文写作 | When converting academic papers into promotional and… | [Paper2All](https://github.com/YuhangChen1/Paper2All) |
-| 287 | `pptx-posters` | 论文写作 | Create research posters using HTML/CSS that can be exported to… | [python-pptx](https://github.com/scanny/python-pptx) |
-| 288 | `scientific-slides` | 论文写作 | Build slide decks and presentations for research talks using… | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/writing/scientific-slides) |
-| 289 | `scientific-writing` | 论文写作 | Core skill for the deep research and writing tool. | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/writing/scientific-writing) |
-| 290 | `venue-templates` | 论文写作 | Access comprehensive LaTeX templates, formatting requirements,… | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/writing/venue-templates) |
-| 291 | `gguf-quantization` | 模型推理 | GGUF format and llama.cpp quantization for efficient CPU/GPU… | [llama.cpp](https://github.com/ggml-org/llama.cpp) |
-| 292 | `groq-inference` | 模型推理 | Ultra-fast LLM inference on custom LPU hardware. | [Groq Python SDK](https://github.com/groq/groq-python) |
-| 293 | `llama-cpp` | 模型推理 | Runs LLM inference on CPU, Apple Silicon, and consumer GPUs… | [llama.cpp](https://github.com/ggml-org/llama.cpp) |
-| 294 | `miles-rl-training` | 模型推理 | Provides guidance for enterprise-grade RL training using miles,… | [Miles](https://github.com/radixark/miles) |
-| 295 | `phoenix-observability` | 模型推理 | Open-source AI observability platform for LLM tracing,… | [Arize Phoenix](https://github.com/Arize-ai/phoenix) |
-| 296 | `serving-llms-vllm` | 模型推理 | Serves LLMs with high throughput using vLLM's PagedAttention… | [vLLM](https://github.com/vllm-project/vllm) |
-| 297 | `sglang` | 模型推理 | Fast structured generation and serving for LLMs with… | [SGLang](https://github.com/sgl-project/sglang) |
-| 298 | `speculative-decoding` | 模型推理 | Accelerate LLM inference using speculative decoding, Medusa… | [Medusa](https://github.com/FasterDecoding/Medusa) |
-| 299 | `tensorrt-llm` | 模型推理 | Optimizes LLM inference with NVIDIA TensorRT for maximum… | [TensorRT-LLM](https://github.com/NVIDIA/TensorRT-LLM) |
-| 300 | `dna-visualization` | 科学可视化 | Publication-quality DNA/RNA visualizations. | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/visualization/dna-visualization) |
-| 301 | `infographics` | 科学可视化 | Create professional infographics using Nano Banana Pro AI with… | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/visualization/infographics) |
-| 302 | `matplotlib` | 科学可视化 | Low-level plotting library for full customization. | [Matplotlib](https://github.com/matplotlib/matplotlib) |
-| 303 | `plotly` | 科学可视化 | Interactive visualization library. | [Plotly.py](https://github.com/plotly/plotly.py) |
-| 304 | `protein-diagram` | 科学可视化 | Publication-quality protein analysis diagrams. | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/visualization/protein-diagram) |
-| 305 | `scientific-schematics` | 科学可视化 | Create or refine publication-quality technical diagrams,… | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/visualization/scientific-schematics) |
-| 306 | `scientific-visualization` | 科学可视化 | Meta-skill for publication-ready figures. | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/visualization/scientific-visualization) |
-| 307 | `seaborn` | 科学可视化 | Statistical visualization with pandas integration. | [Seaborn](https://github.com/mwaskom/seaborn) |
-| 308 | `cirq` | 量子计算 | Google quantum computing framework. | [Cirq](https://github.com/quantumlib/Cirq) |
-| 309 | `pennylane` | 量子计算 | Hardware-agnostic quantum ML framework with automatic… | [PennyLane](https://github.com/PennyLaneAI/pennylane) |
-| 310 | `qiskit` | 量子计算 | IBM quantum computing framework. | [Qiskit](https://github.com/Qiskit/qiskit) |
-| 311 | `qutip` | 量子计算 | Quantum physics simulation library for open quantum systems. | [QuTiP](https://github.com/qutip/qutip) |
-| 312 | `liteparse` | 文档解析 | Parse, perform multi-format document conversion or spatially… | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/document-parsing/liteparse) |
+| 243 | `unified-research-finder` | 科研流程 | 统一的学术文献检索助手。覆盖两大体系：(1) PubMed 官方 E-utilities… | [**Unified Research Finder**](https://gitee.com/georgechou17/Unified-Research-Finder) |
+| 244 | `verify` | 科研流程 | Run real checks for a claim, implementation, result, or… | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/research/verify) |
+| 245 | `checkpoint` | 会话与工程 | Save a local recovery packet from durable session state. | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/other/checkpoint) |
+| 246 | `compact` | 会话与工程 | Compact the current chat context into a concise summary. | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/other/compact) |
+| 247 | `context` | 会话与工程 | Show the current conversation context composition, estimated… | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/other/context) |
+| 248 | `get-available-resources` | 会话与工程 | At the start of any computationally intensive scientific task… | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/other/get-available-resources) |
+| 249 | `goal` | 会话与工程 | Set an explicit objective, success criteria, and stopping… | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/other/goal) |
+| 250 | `handoff` | 会话与工程 | Create a self-contained continuation packet for another agent. | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/other/handoff) |
+| 251 | `hugging-face-jobs` | 会话与工程 | When users want to run any workload on Hugging Face Jobs… | [huggingface_hub](https://github.com/huggingface/huggingface_hub) |
+| 252 | `hugging-face-trackio` | 会话与工程 | Track and visualize ML training experiments with Trackio. | [Trackio](https://github.com/gradio-app/trackio) |
+| 253 | `init` | 会话与工程 | Create or refresh an AGENTS.md project instruction file. | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/other/init) |
+| 254 | `iso-13485-certification` | 会话与工程 | Comprehensive toolkit for preparing ISO 13485 certification… | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/other/iso-13485-certification) |
+| 255 | `labarchive-integration` | 会话与工程 | Electronic lab notebook API integration. | [labarchives-py](https://github.com/mcmero/labarchives-py) |
+| 256 | `plan` | 会话与工程 | Enter read-only plan mode and produce a decision-ready plan. | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/other/plan) |
+| 257 | `resume` | 会话与工程 | Resume an exhausted bounded research run from its existing… | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/other/resume) |
+| 258 | `skill-installer` | 会话与工程 | Install or remove third-party openscience skills from a public… | [Anthropic Skills](https://github.com/anthropics/skills) |
+| 259 | `status` | 会话与工程 | Show live session, plan, artifact, model, and workspace state. | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/other/status) |
+| 260 | `stop` | 会话与工程 | Stop active work in the current session. | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/other/stop) |
+| 261 | `fireworks-ai-inference` | 云端算力 | Fast inference and fine-tuning platform with serverless and… | [Fireworks AI](https://github.com/fw-ai/cookbook) |
+| 262 | `givemeanode-agent-compute` | 云端算力 | Operate GiveMeANode GPU nodes, batch jobs, storage, and rollout… | [GiveMeANode](https://givemeanode.com/docs) |
+| 263 | `lambda-gpu-cloud` | 云端算力 | Safely inspect and operate Lambda Cloud GPU instances through… | [Lambda](https://lambda.ai/) |
+| 264 | `modal-serverless-gpu` | 云端算力 | Run approved CPU or GPU work through OpenScience compute_job on… | [Modal](https://github.com/modal-labs/modal-client) |
+| 265 | `runpod-gpu-cloud` | 云端算力 | Safely inspect and operate RunPod resources with runpodctl,… | [RunPod](https://github.com/runpod/runpodctl) |
+| 266 | `skypilot-multi-cloud-orchestration` | 云端算力 | Multi-cloud orchestration for ML workloads with automatic cost… | [SkyPilot](https://github.com/skypilot-org/skypilot) |
+| 267 | `tensorpool-gpu-cloud` | 云端算力 | Safely inspect and operate TensorPool GPU clusters and jobs… | [TensorPool](https://github.com/tensorpool/tensorpool) |
+| 268 | `tinker-fine-tuning` | 云端算力 | Provides guidance for fine-tuning LLMs using the Tinker cloud… | [Tinker](https://github.com/thinking-machines-lab/tinker-cookbook) |
+| 269 | `tinker-training-cost` | 云端算力 | Calculates training costs for Tinker fine-tuning jobs. | [Tinker](https://github.com/thinking-machines-lab/tinker-cookbook) |
+| 270 | `together-ai-inference` | 云端算力 | Serverless inference, fine-tuning, embeddings, image… | [Together AI](https://github.com/togethercomputer/together-python) |
+| 271 | `vast-ai-gpu-cloud` | 云端算力 | Safely inspect and operate Vast.ai marketplace instances with… | [Vast.ai](https://github.com/vast-ai/vast-python) |
+| 272 | `aeon` | 数据工程 | For time series machine learning tasks including… | [aeon](https://github.com/aeon-toolkit/aeon) |
+| 273 | `dask` | 数据工程 | Distributed computing for larger-than-RAM pandas/NumPy… | [Dask](https://github.com/dask/dask) |
+| 274 | `geopandas` | 数据工程 | Python library for working with geospatial vector data… | [GeoPandas](https://github.com/geopandas/geopandas) |
+| 275 | `hdf5-pde-data-loading` | 数据工程 | Patterns for loading PDE simulation datasets (PDEBench,… | [HDF5 / h5py](https://github.com/h5py/h5py) |
+| 276 | `hugging-face-datasets` | 数据工程 | Create and manage datasets on Hugging Face Hub. | [Datasets](https://github.com/huggingface/datasets) |
+| 277 | `markitdown` | 数据工程 | Convert files and office documents to Markdown. | [MarkItDown](https://github.com/microsoft/markitdown) |
+| 278 | `polars` | 数据工程 | Fast in-memory DataFrame library for datasets that fit in RAM. | [Polars](https://github.com/pola-rs/polars) |
+| 279 | `ray-data` | 数据工程 | Scalable data processing for ML workloads. | [Ray Data](https://github.com/ray-project/ray) |
+| 280 | `vaex` | 数据工程 | Processing and analyzing large tabular datasets (billions of… | [Vaex](https://github.com/vaexio/vaex) |
+| 281 | `zarr-python` | 数据工程 | Chunked N-D arrays for cloud storage. | [Zarr](https://github.com/zarr-developers/zarr-python) |
+| 282 | `citation-management` | 论文写作 | Comprehensive citation management for academic research. | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/writing/citation-management) |
+| 283 | `hugging-face-paper-publisher` | 论文写作 | Publish and manage research papers on Hugging Face Hub. | [huggingface_hub](https://github.com/huggingface/huggingface_hub) |
+| 284 | `latex-posters` | 论文写作 | Create professional research posters in LaTeX using… | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/writing/latex-posters) |
+| 285 | `literature-review` | 论文写作 | Answer literature-review requests with a concise,… | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/writing/literature-review) |
+| 286 | `ml-paper-writing` | 论文写作 | Write publication-ready ML/AI papers for NeurIPS, ICML, ICLR,… | [ACL Style Files](https://github.com/acl-org/acl-style-files) |
+| 287 | `paper-2-web` | 论文写作 | When converting academic papers into promotional and… | [Paper2All](https://github.com/YuhangChen1/Paper2All) |
+| 288 | `pptx-posters` | 论文写作 | Create research posters using HTML/CSS that can be exported to… | [python-pptx](https://github.com/scanny/python-pptx) |
+| 289 | `scientific-slides` | 论文写作 | Build slide decks and presentations for research talks using… | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/writing/scientific-slides) |
+| 290 | `scientific-writing` | 论文写作 | Core skill for the deep research and writing tool. | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/writing/scientific-writing) |
+| 291 | `venue-templates` | 论文写作 | Access comprehensive LaTeX templates, formatting requirements,… | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/writing/venue-templates) |
+| 292 | `gguf-quantization` | 模型推理 | GGUF format and llama.cpp quantization for efficient CPU/GPU… | [llama.cpp](https://github.com/ggml-org/llama.cpp) |
+| 293 | `groq-inference` | 模型推理 | Ultra-fast LLM inference on custom LPU hardware. | [Groq Python SDK](https://github.com/groq/groq-python) |
+| 294 | `llama-cpp` | 模型推理 | Runs LLM inference on CPU, Apple Silicon, and consumer GPUs… | [llama.cpp](https://github.com/ggml-org/llama.cpp) |
+| 295 | `miles-rl-training` | 模型推理 | Provides guidance for enterprise-grade RL training using miles,… | [Miles](https://github.com/radixark/miles) |
+| 296 | `phoenix-observability` | 模型推理 | Open-source AI observability platform for LLM tracing,… | [Arize Phoenix](https://github.com/Arize-ai/phoenix) |
+| 297 | `serving-llms-vllm` | 模型推理 | Serves LLMs with high throughput using vLLM's PagedAttention… | [vLLM](https://github.com/vllm-project/vllm) |
+| 298 | `sglang` | 模型推理 | Fast structured generation and serving for LLMs with… | [SGLang](https://github.com/sgl-project/sglang) |
+| 299 | `speculative-decoding` | 模型推理 | Accelerate LLM inference using speculative decoding, Medusa… | [Medusa](https://github.com/FasterDecoding/Medusa) |
+| 300 | `tensorrt-llm` | 模型推理 | Optimizes LLM inference with NVIDIA TensorRT for maximum… | [TensorRT-LLM](https://github.com/NVIDIA/TensorRT-LLM) |
+| 301 | `dna-visualization` | 科学可视化 | Publication-quality DNA/RNA visualizations. | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/visualization/dna-visualization) |
+| 302 | `infographics` | 科学可视化 | Create professional infographics using Nano Banana Pro AI with… | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/visualization/infographics) |
+| 303 | `matplotlib` | 科学可视化 | Low-level plotting library for full customization. | [Matplotlib](https://github.com/matplotlib/matplotlib) |
+| 304 | `meta-analysis-figures` | 科学可视化 | 系统综述与 Meta 分析的投稿级图件生成器。用可复现脚本从 CSV / 计数直接产出森林图（forest… | [**本包自研**](https://gitee.com/georgechou17/open-science-dispatcher) |
+| 305 | `plotly` | 科学可视化 | Interactive visualization library. | [Plotly.py](https://github.com/plotly/plotly.py) |
+| 306 | `protein-diagram` | 科学可视化 | Publication-quality protein analysis diagrams. | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/visualization/protein-diagram) |
+| 307 | `scientific-schematics` | 科学可视化 | Create or refine publication-quality technical diagrams,… | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/visualization/scientific-schematics) |
+| 308 | `scientific-visualization` | 科学可视化 | Meta-skill for publication-ready figures. | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/visualization/scientific-visualization) |
+| 309 | `seaborn` | 科学可视化 | Statistical visualization with pandas integration. | [Seaborn](https://github.com/mwaskom/seaborn) |
+| 310 | `cirq` | 量子计算 | Google quantum computing framework. | [Cirq](https://github.com/quantumlib/Cirq) |
+| 311 | `pennylane` | 量子计算 | Hardware-agnostic quantum ML framework with automatic… | [PennyLane](https://github.com/PennyLaneAI/pennylane) |
+| 312 | `qiskit` | 量子计算 | IBM quantum computing framework. | [Qiskit](https://github.com/Qiskit/qiskit) |
+| 313 | `qutip` | 量子计算 | Quantum physics simulation library for open quantum systems. | [QuTiP](https://github.com/qutip/qutip) |
+| 314 | `liteparse` | 文档解析 | Parse, perform multi-format document conversion or spatially… | [OpenScience 自研](https://github.com/synthetic-sciences/openscience/tree/main/backend/cli/skills/document-parsing/liteparse) |
 
-#### 5.2 MCP 连接器（6 个）
+#### 5.2 MCP 连接器（7 个）
 
 | # | 连接器 | 提供方 | 源仓库 |
 |---:|---|---|---|
@@ -604,6 +610,24 @@ A：直接删掉 `skills\openscience-dispatcher` 文件夹，无残留。
 | 4 | **Box MCP Server** | Box | [box-community/mcp-server-box](https://github.com/box-community/mcp-server-box) |
 | 5 | **Dropbox Dash MCP Server** | Dropbox | [dropbox/mcp-server-dash](https://github.com/dropbox/mcp-server-dash) |
 | 6 | **AWS MCP Server (Amazon S3)** | AWS | [awslabs/mcp](https://github.com/awslabs/mcp) |
+| 7 | **SPSS MCP Server** | meteor0620（社区） | [meteor0620/spss-mcp](https://github.com/meteor0620/spss-mcp) |
+
+#### 5.3 本包扩展技能（`local-skills/`，2 个）
+
+这 2 个技能**不属于上游 OpenScience**，是本包为补齐科研流程里的空缺而自行维护的。
+它们放在独立的 `local-skills/` 目录下：`tools/rebuild.py` 从上游重建时会**原样保留**这些技能
+并重新并入 `registry.json`，所以不会被覆盖，也不需要放进 `tools/patches/`。
+
+| 技能 | 分类 | 用途 | 版本 | 来源 |
+|---|---|---|---|---|
+| `meta-analysis-figures` | 科学可视化 | 系统综述与 Meta 分析的投稿级图件生成器。用可复现脚本从 CSV / 计数直接产出森林图（forest… | 1.0.0 | [本包自研](https://gitee.com/georgechou17/open-science-dispatcher) |
+| `unified-research-finder` | 科研流程 | 统一的学术文献检索助手。覆盖两大体系：(1) PubMed 官方 E-utilities API（esearch+efetch，真实… | v1.1.1 | [Unified Research Finder](https://gitee.com/georgechou17/Unified-Research-Finder) |
+
+> `unified-research-finder` 是作者本人的独立项目（MIT-0），本包内置其副本以便调度器统一路由；
+> **以源仓库为准**，需要最新版本时请直接从源仓库获取。
+> `meta-analysis-figures` 为本包自研（Apache-2.0），补齐系统综述 / Meta 分析的四类核心图件：
+> 森林图、漏斗图、PRISMA 2020 流程图、偏倚风险红绿灯图——上游技能库只提供底层绘图能力，
+> 没有这些成品实现。
 
 > 「源仓库」列为该子技能所依托的上游开源项目；标注 **OpenScience 自研** 的条目版权归上游 OpenScience 仓库所有。
 > 表中所有链接均已做 HTTP 可用性校验。
@@ -615,7 +639,7 @@ A：直接删掉 `skills\openscience-dispatcher` 文件夹，无残留。
 这份清单能成立，是因为有大量人和项目把东西无偿开放了出来。
 
 **首先感谢 [OpenScience](https://github.com/synthetic-sciences/openscience)（Synthetic Sciences / InkVell Inc.）**——
-312 个子技能、6 个 MCP 目录与整套科研 Agent 架构都出自这里，
+上游的子技能树、MCP 目录与整套科研 Agent 架构都出自这里，
 以 Apache-2.0 授权，让下游可以合法地把这套能力搬到别的平台。
 
 **感谢 243 个被封装的开源项目与数据库**，例如：
@@ -640,7 +664,8 @@ Andrey Fedorov（`imaging-data-commons`，1 篇，MIT）。
 Peter Williams（algorithm / algorithmic）、Hal Daumé III、Norman Gray（urlbst），
 以及 AAAI / ACL / COLM / ICLR / ICML / NeurIPS 各会议模板维护者。
 
-**感谢所有 MCP 服务的提供方**：San Francisco Compute（GiveMeANode）、GitHub、Benchling、Box、Dropbox、AWS。
+**感谢所有 MCP 服务的提供方**：San Francisco Compute（GiveMeANode）、GitHub、Benchling、Box、Dropbox、AWS，
+以及社区维护的 [SPSS MCP Server](https://github.com/meteor0620/spss-mcp)（meteor0620，MIT）。
 
 也感谢每一个在深夜修 issue 的维护者——开源不是免费的，只是有人替你付了账单。
 
@@ -654,10 +679,10 @@ Peter Williams（algorithm / algorithmic）、Hal Daumé III、Norman Gray（url
 |---|---|
 | [`LICENSE`](LICENSE) | Apache License 2.0 全文（上游，随附原版权行） |
 | [`NOTICE`](NOTICE) | 上游 NOTICE 要求的署名声明 |
-| [`ATTRIBUTION.md`](ATTRIBUTION.md) | 312 篇子技能的作者与许可分布 |
+| [`ATTRIBUTION.md`](ATTRIBUTION.md) | 314 篇子技能的作者与许可分布 |
 | [`THIRD-PARTY-NOTICES.md`](THIRD-PARTY-NOTICES.md) | 内嵌第三方作品清单（MIT / LPPL / 数据条款）与再分发提示 |
 
-**著作权分布**（按 `metadata.skill-author` 实测）：
+**著作权分布**（上游按 `metadata.skill-author` 实测，本地技能按随包 `LICENSE`）：
 
 | 著作权人 | 篇数 | 许可 |
 |---|---:|---|
@@ -667,8 +692,11 @@ Peter Williams（algorithm / algorithmic）、Hal Daumé III、Norman Gray（url
 | InkVell Inc. | 12 | MIT |
 | Microsoft（`markitdown`） | 1 | MIT |
 | Andrey Fedorov（`imaging-data-commons`） | 1 | MIT |
+| GeorgeChou17（`local-skills/meta-analysis-figures`，本包自研） | 1 | Apache-2.0 |
+| GeorgeChou17（`local-skills/unified-research-finder`，作者独立项目副本） | 1 | MIT-0 |
 
-即 **Apache-2.0 = 298 篇 · MIT = 14 篇**；MIT 部分要求保留版权声明，因此本仓库**必须**随附上述署名文件。
+即 **Apache-2.0 = 299 篇 · MIT = 14 篇 · MIT-0 = 1 篇**；MIT 部分要求保留版权声明，
+因此本仓库**必须**随附上述署名文件。MIT-0 不要求署名，此处仍如实标注来源。
 
 **三点务必注意：**
 
@@ -681,7 +709,8 @@ Peter Williams（algorithm / algorithmic）、Hal Daumé III、Norman Gray（url
    许可文件不替代这些条款，请自行确认。
 
 仅调度层（`SKILL.md`、`dispatch.py`、`dispatch.cmd`、`registry.json`、`tools/`、`mcp/INSTALL.md`）
-为本项目原创，同样以 Apache-2.0 分发以保持整体一致。
+与 `local-skills/` 下的自研技能为本项目原创，同样以 Apache-2.0 分发以保持整体一致
+（`local-skills/unified-research-finder` 例外，按作者的 MIT-0 分发）。
 
 > 本文档是基于源码实测整理的合规声明，**不构成法律意见**。若用于商业或融资场景，建议由法务复核。
 
@@ -716,19 +745,28 @@ Windows 下用 `dispatch.cmd` 即可，它会自动探测 `py -3` / `python` / `
 | `mcp install <id> [--write] [--config PATH]` | 生成 / 写入 MCP 安装方案 |
 | `mcp plan` | 一次性生成所有可自动安装连接器的方案 |
 
-**设计说明：为什么 312 个子技能不会被误注册**
-子技能位于 `skills/<分类>/<技能>/SKILL.md`（相对技能根目录的第 4 层）。
+**设计说明：为什么 314 个子技能不会被误注册**
+子技能位于 `skills/<分类>/<技能>/SKILL.md`（相对技能根目录的第 4 层），
+本包自研技能位于 `local-skills/<分类>/<技能>/SKILL.md`（同样是第 4 层）。
 主流 Agent 平台的技能发现是**单层**的（只扫描 `<skills>/<名称>/SKILL.md`），
-因此它们不会被当成 312 个顶层技能，也不会拖慢平台启动——
+因此它们不会被当成 314 个顶层技能，也不会拖慢平台启动——
 只能通过本调度器访问，这正是设计意图。
 
 **从上游重建**
 
 ```bash
 git clone https://github.com/synthetic-sciences/openscience
-python tools/rebuild.py --source ./openscience   # 重建 skills/ 与 registry.json
+python tools/rebuild.py --source ./openscience   # 重建 skills/ 与 registry.json（含 local-skills/ 并入）
 python tools/gen_readme.py                       # 重新生成本清单
 ```
+
+重建时 `skills/` 会被上游文件逐字节覆盖，所以**直接改 `skills/` 里的文件会在下次重建时丢失**。
+两类改动各有归宿：
+
+| 改动类型 | 放在哪 | 谁来落回去 |
+|---|---|---|
+| 修上游技能里的 bug | `tools/patches/<同名相对路径>` | `tools/rebuild.py` 末尾自动调用 `tools/apply_patches.py` |
+| 新增/自有技能 | `local-skills/<分类>/<技能>/` | `tools/rebuild.py` 自动并入 `registry.json`，文件不动 |
 
 **网络自适应**：`dispatch.py` 按 IP 判定区域，自动在 npm / PyPI / GitHub / Docker 的
 国内镜像与国际站之间选择。
@@ -743,11 +781,11 @@ python tools/gen_readme.py                       # 重新生成本清单
 
 ## English
 
-> Ports the **312 scientific sub-skills** and **6 MCP connectors** of
+> Ports the **314 scientific sub-skills** and **7 MCP connectors** of
 > [OpenScience](https://github.com/synthetic-sciences/openscience) onto generic AI agent platforms.
 > Sub-skills are *capability*, MCP servers are *tooling*, and the dispatcher routes them to your question.
 
-`312` Skills · `16` Categories · `6` MCP Connectors · Apache-2.0 · Python 3.8+ · Zero dependencies
+`314` Skills · `16` Categories · `7` MCP Connectors · Apache-2.0 · Python 3.8+ · Zero dependencies
 
 ### 1. The real bottleneck for undergrads and master's students
 
@@ -812,7 +850,7 @@ skills
     ├── SKILL.md          ← must sit at this level
     ├── dispatch.cmd
     ├── registry.json
-    ├── skills\           ← the 312 sub-skills
+    ├── skills\           ← the 314 sub-skills
     ├── mcp\
     └── tools\
 ```
@@ -882,9 +920,10 @@ tooling, and state four things clearly:
 
 ### 4. Scale
 
-**312 skills across 16 categories + 6 MCP connectors.**
+**314 skills across 16 categories + 7 MCP connectors.**
 Of these, 243 wrap a concrete open-source project and 69 are
-OpenScience's own methodology / workflow skills.
+OpenScience's own methodology / workflow skills; a further 2 are maintained by
+this package under `local-skills/` (see §5.3).
 
 The per-skill inventory with source-repository links lives in
 [§5.1 above](#inventory) — it is generated from `registry.json` and `tools/sources.py`,
@@ -893,8 +932,8 @@ and every link is HTTP-verified.
 ### 5. Acknowledgements
 
 Above all, **[OpenScience](https://github.com/synthetic-sciences/openscience)** (Synthetic Sciences /
-InkVell Inc.) — all 312 sub-skills, the MCP catalogue and the research-agent architecture
-originate there under Apache-2.0.
+InkVell Inc.) — the 312 upstream sub-skills, the MCP catalogue and the research-agent
+architecture originate there under Apache-2.0.
 
 Thanks also to the 243 open-source projects and public databases these skills wrap
 (Scanpy, RDKit, Biopython, PyTorch, Hugging Face, vLLM, Qiskit, Astropy, PubMed, UniProt, PDB,
@@ -910,7 +949,8 @@ Norman Gray) and venue template maintainers, and to every MCP provider
 Distributed under **Apache-2.0**. See [`LICENSE`](LICENSE), [`NOTICE`](NOTICE),
 [`ATTRIBUTION.md`](ATTRIBUTION.md) and [`THIRD-PARTY-NOTICES.md`](THIRD-PARTY-NOTICES.md).
 
-- **Apache-2.0 = 298 sub-skills · MIT = 14** (the MIT part requires retaining its copyright notice).
+- **Apache-2.0 = 299 · MIT = 14 · MIT-0 = 1** (MIT requires retaining its copyright notice;
+  MIT-0 does not require attribution, but the source is credited here anyway).
 - The `license:` field inside each sub-skill's frontmatter describes **the third-party library the skill
   documents**, not this repository. No GPL/LGPL/CeCILL source is bundled.
 - Third-party **LaTeX packages (mostly LPPL)** are bundled under
@@ -938,7 +978,7 @@ Windows 10+ / macOS / Linux; on Windows `dispatch.cmd` auto-detects `py -3` / `p
 | `mcp install <id> [--write] [--config PATH]` | Print or persist an install plan |
 
 Sub-skills live at `skills/<category>/<skill>/SKILL.md` — depth 4, below the single-level
-skill scan that mainstream agent platforms use, so the 312 sub-skills are never
+skill scan that mainstream agent platforms use, so the 314 sub-skills are never
 registered as top-level skills. That is intentional.
 
 ```bash
@@ -946,6 +986,11 @@ git clone https://github.com/synthetic-sciences/openscience
 python tools/rebuild.py --source ./openscience   # rebuild skills/ and registry.json
 python tools/gen_readme.py                       # regenerate this inventory
 ```
+
+Two kinds of local change survive a rebuild, each in its own place: a fix to an upstream
+skill goes into `tools/patches/<same relative path>` (re-applied automatically at the end
+of `rebuild.py`), while a new or self-authored skill goes into `local-skills/<category>/<name>/`
+and is merged into `registry.json` with `origin: local`. Editing `skills/` directly does not.
 
 MCP writes are opt-in: the plan is printed by default, `--write` persists with an automatic
 backup. Config path precedence is `--config` > `$OSD_MCP_CONFIG` > `~/.workbuddy/mcp.json`;

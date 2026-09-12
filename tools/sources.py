@@ -366,4 +366,19 @@ MCP = {
 "box": ("Box MCP Server", "Box", "https://github.com/box-community/mcp-server-box"),
 "dropbox": ("Dropbox Dash MCP Server", "Dropbox", "https://github.com/dropbox/mcp-server-dash"),
 "s3": ("AWS MCP Server (Amazon S3)", "AWS", "https://github.com/awslabs/mcp"),
+"spss": ("SPSS MCP Server", "meteor0620（社区）", "https://github.com/meteor0620/spss-mcp"),
+}
+
+# ── 本地技能（local-skills/，由本包自行维护，不是上游 OpenScience 内容）──────
+# 值格式同 URLS：name → (项目名, 源仓库 URL)。
+# 哨兵 SELF 表示「本包原创」，链接指向本包仓库。
+SELF = "SELF"
+SELF_REPO = "https://gitee.com/georgechou17/open-science-dispatcher"
+
+LOCAL_SKILLS = {
+    "unified-research-finder": (
+        "Unified Research Finder",
+        "https://gitee.com/georgechou17/Unified-Research-Finder",
+    ),
+    "meta-analysis-figures": ("本包自研", SELF),
 }

@@ -121,7 +121,7 @@ $ARGUMENTS = 用户给出的题目或需求描述（可为空）
 
 **做什么**：在投入大量工作前，先确认这个题目**没人做过一模一样的**。
 
-1. 用 `pubmed-database` 检索是否已有同题的**系统综述 / Meta 分析**。
+1. 用 `unified-research-finder` 或 `pubmed-database` 检索是否已有同题的**系统综述 / Meta 分析**。
 2. 用 `openalex-database` 与 `perplexity-search` 交叉确认。
 3. 若已存在同题 Meta 分析，**必须告诉用户**，并给出差异化方案：
    - 换人群（如限定老年 / 某地区 / 某合并症人群）
@@ -148,11 +148,12 @@ $ARGUMENTS = 用户给出的题目或需求描述（可为空）
 2. **记录检索元数据**（可复现的关键）：数据库、检索日期、完整检索式、命中条数。
 3. **执行检索并保存原始记录**：导出 PMID / 标题 / 作者 / 期刊 / 年份 / 摘要 / DOI。
 
-**调用**：`dispatch.py load pubmed-database`（主力）、`load literature-review`（PRISMA 流程）、`load openalex-database`（补充）
+**调用**：`dispatch.py load unified-research-finder`（**首选**：PubMed 官方 E-utilities + Google 学术镜像，直接返回真实 PMID / DOI / 影响因子）、`load pubmed-database`（MeSH 主题词与检索式细节）、`load literature-review`（PRISMA 流程）、`load openalex-database`（补充）
 
 **产物**：`02-search-strategy.md`（检索式与元数据）、`02-records.csv`（原始记录）
 
 **门控**：检索式完整记录 + 记录数 > 0。**没有原始记录文件，不许进入筛选阶段。**
+**铁律**：检索结果只能来自 `unified-research-finder` 的脚本真实响应。**找不到就是找不到，绝不编造** PMID、标题、引用数或下载链接。
 
 ---
 
@@ -231,7 +232,7 @@ $ARGUMENTS = 用户给出的题目或需求描述（可为空）
 
 **铁律**：图必须由数据文件**程序化生成**（matplotlib / plotly），导出 300 dpi、TIFF 或 PNG。**不许"描述一下图长什么样"了事。**
 
-**调用**：`dispatch.py load matplotlib`、`load seaborn`、`load scientific-schematics`（机制示意图）
+**调用**：`dispatch.py load meta-analysis-figures`（**首选**：森林图 / 漏斗图 / PRISMA 2020 流程图 / 偏倚风险红绿灯，吃 CSV 或计数直接出图，并内置数值一致性校验）、`load matplotlib`（其余自定义图）、`load seaborn`、`load scientific-schematics`（机制示意图）
 
 **产物**：`figures/fig1-prisma.png`、`figures/fig2-forest.png`、`figures/fig3-funnel.png` 等
 

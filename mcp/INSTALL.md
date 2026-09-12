@@ -1,7 +1,8 @@
 # MCP 连接器安装指南
 
-本目录的 `catalog.json` 是上游 OpenScience `backend/cli/src/mcp/catalog.ts` 的完整转录：
-6 个连接器、读写能力、安全说明、前置条件。**全部默认禁用**，`writes_enabled_by_catalog` 均为 `false`。
+本目录的 `catalog.json` 以上游 OpenScience `backend/cli/src/mcp/catalog.ts` 的转录为基础，
+收录 **7 个连接器**（上游 6 个 + 本包补入的社区 `spss`），含读写能力、安全说明、前置条件。
+**全部默认禁用**，`writes_enabled_by_catalog` 均为 `false`。
 
 ## 使用方式
 
@@ -65,7 +66,7 @@ export OSD_MCP_CONFIG="$HOME/my-agent/mcp.json"
 引入前请重新核对 `source_url` 上的官方文档——上游明确表示**不对任何服务端做"只读"背书**，
 所有写能力都保留在服务端，调用时仍要过一次权限边界。
 
-## 三个特殊情形
+## 四个特殊情形
 
 **Benchling（manual_review）** — 端点是租户专属，本包不会猜测或存储你的租户地址。
 需管理员在 Benchling 开启 Benchling Chat 与 MCP、启用 V3 API，再把
@@ -74,6 +75,12 @@ export OSD_MCP_CONFIG="$HOME/my-agent/mcp.json"
 **Dropbox（manual_review）** — 上游只发布源码仓库、不提供托管端点。
 上游明确拒绝"克隆并执行活动分支"，因此必须：固定并审阅一个 commit → 用只读作用域创建 Dropbox 应用 →
 安装依赖（按上表选源）→ 手工登记确切的本地启动命令。
+
+**IBM SPSS（`spss`，manual_review）** — 社区项目 [`meteor0620/spss-mcp`](https://github.com/meteor0620/spss-mcp)，
+**非厂商端点**，本包不会克隆或安装它。仅 Windows + 已装 SPSS（含 Python 集成插件）可用；
+`pyreadstat` 负责 `.sav` 即时读写，统计过程由一个持久 SPSS 进程执行。
+**`run-syntax` / `run-python` 等价于本机代码执行**，务必先审阅生成的 `.sps` 再放行。
+配置命令含 `<安装目录>` 占位符——**本工具检测到占位符会拒绝 `--write`**，请先替换成真实路径。
 
 **Amazon S3** — 该端点覆盖面**大于** S3（是整个 AWS MCP），必须用最小权限 IAM 身份接入；
 CloudTrail 才是权威的外部审计日志。
@@ -127,7 +134,8 @@ CloudTrail 才是权威的外部审计日志。
 ## 许可与来源
 
 本文件与 `catalog.json` 属 OpenScience Dispatcher 的调度层，以 **Apache-2.0** 分发
-（`SPDX-License-Identifier: Apache-2.0`）。`catalog.json` 转录自上游 OpenScience
-`backend/cli/src/mcp/catalog.ts`，版权归 Synthetic Sciences / InkVell Inc.，
+（`SPDX-License-Identifier: Apache-2.0`）。`catalog.json` 中 6 个上游连接器转录自 OpenScience
+`backend/cli/src/mcp/catalog.ts`，版权归 Synthetic Sciences / InkVell Inc.；
+第 7 个 `spss` 条目（含选型说明）为本包新增，指向社区项目 `meteor0620/spss-mcp`。
 见仓库根目录的 [`LICENSE`](../LICENSE)、[`NOTICE`](../NOTICE)、
 [`ATTRIBUTION.md`](../ATTRIBUTION.md) 与 [`THIRD-PARTY-NOTICES.md`](../THIRD-PARTY-NOTICES.md)。

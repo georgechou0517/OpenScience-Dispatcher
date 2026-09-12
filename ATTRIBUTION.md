@@ -10,13 +10,16 @@
 
 ### Bundled content — not original to this project
 
-`skills/` and `mcp/catalog.json` come from the **OpenScience** project.
+`skills/` and most of `mcp/catalog.json` come from the **OpenScience** project.
 
 - Project: OpenScience
 - Source: https://github.com/synthetic-sciences/openscience
 - Version bundled: 2.0.66
 - Sub-skills: 312 (16 categories)
-- MCP connector catalog entries: 6 (transcribed from `backend/cli/src/mcp/catalog.ts`)
+- MCP connector catalog entries: 6 transcribed from `backend/cli/src/mcp/catalog.ts`, plus 1 community entry (`spss`) added by this package
+
+Two further sub-skills under `local-skills/` are **not** OpenScience content — see
+"Original to this project" below.
 
 The bundled sub-skills are **not the work of a single author**. Copyright holders:
 
@@ -38,9 +41,13 @@ plus the third-party LaTeX packages bundled with the paper templates, are itemis
 
 The dispatcher layer — `SKILL.md`, `dispatch.py`, `dispatch.cmd`, `registry.json`,
 `mcp/INSTALL.md`, `tools/rebuild.py`, `tools/gen_readme.py`, `tools/sources.py`,
-`README.md`, `CHANGELOG.md` — is original work,
+`tools/aliases.json`, `README.md`, `CHANGELOG.md` — is original work,
 distributed under the same Apache-2.0 terms as the bundle it ships with.
 Every dispatcher-layer source file carries an `SPDX-License-Identifier: Apache-2.0` header.
+
+Two bundled sub-skills under `local-skills/` are also original to this project:
+`visualization/meta-analysis-figures` (Apache-2.0) and `research/unified-research-finder`
+(an MIT-0 copy of the author's own standalone project — see its `LICENSE`).
 
 ### A note on the `license:` frontmatter field
 
@@ -61,13 +68,15 @@ Do not read these values as license declarations for this repository. See
 
 ### 随包内容 —— 非本项目原创
 
-`skills/` 与 `mcp/catalog.json` 来自 **OpenScience** 项目。
+`skills/` 与 `mcp/catalog.json` 的绝大部分来自 **OpenScience** 项目。
 
 - 项目：OpenScience
 - 来源：https://github.com/synthetic-sciences/openscience
 - 打包版本：2.0.66
 - 子技能：312 篇（16 个分类）
-- MCP 连接器目录条目：6 条（转录自 `backend/cli/src/mcp/catalog.ts`）
+- MCP 连接器目录条目：6 条转录自 `backend/cli/src/mcp/catalog.ts`，另 1 条社区条目（`spss`）为本包新增
+
+`local-skills/` 下另有 2 篇子技能**不属于 OpenScience**，见下方「本项目原创」。
 
 子技能**并非单一作者的作品**，著作权人分布：
 
@@ -87,9 +96,14 @@ Apache-2.0 部分见 [`LICENSE`](LICENSE) 与 [`NOTICE`](NOTICE)；MIT 部分及
 ### 本项目原创部分
 
 调度层 —— `SKILL.md`、`dispatch.py`、`dispatch.cmd`、`registry.json`、`mcp/INSTALL.md`、
-`tools/rebuild.py`、`tools/gen_readme.py`、`tools/sources.py`、`README.md`、`CHANGELOG.md`
+`tools/rebuild.py`、`tools/gen_readme.py`、`tools/sources.py`、`tools/aliases.json`、
+`README.md`、`CHANGELOG.md`
 —— 为本项目原创，与随包内容一致地以
 Apache-2.0 分发。调度层每个源文件均带 `SPDX-License-Identifier: Apache-2.0` 头。
+
+`local-skills/` 下的 2 篇子技能同样为本项目原创：`visualization/meta-analysis-figures`
+（Apache-2.0）与 `research/unified-research-finder`（作者本人独立项目的 MIT-0 副本，
+许可见其自带 `LICENSE`）。
 
 ### 关于 frontmatter 里的 `license:` 字段
 
