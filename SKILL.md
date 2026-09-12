@@ -1,13 +1,21 @@
 ---
 name: openscience-dispatcher
-version: 1.1.0
-description: 综合科研调度器（OpenScience Dispatcher）——把 312 个 OpenScience 子技能（16 类：ml-training / biology / databases / llm-tools / chemistry / physics / coding / research / cloud-compute / data-engineering / writing / ml-inference / visualization / quantum / other / document-parsing）与 6 个按需安装的 MCP 工具，在通用 AI Agent 平台上编排成类 OpenScience 的科研工作流。触发场景：单细胞与组学分析、结构生物学与药物设计、化学信息学、科学数据库查询（UniProt / PDB / ChEMBL / PubMed / arXiv 等）、模型训练与微调、GPU 云算力调度、量子计算、科学可视化、论文检索与写作与同行评审；或用户直接提到 OpenScience、子技能、科研调度、scientific workflows。
+version: 1.2.0
+description: 综合科研调度器（OpenScience Dispatcher）——把 312 个 OpenScience 子技能（16 类：ml-training / biology / databases / llm-tools / chemistry / physics / coding / research / cloud-compute / data-engineering / writing / ml-inference / visualization / quantum / other / document-parsing）与 6 个按需安装的 MCP 工具，在通用 AI Agent 平台上编排成类 OpenScience 的科研工作流。**内置端到端 SCI 论文工作流**：面向零科研基础的本科生，从一句话题目经信息采集、可行性查证、检索、PRISMA 筛选、数据提取、统计、图表、英文稿、反造假审计到投稿准备，全程由本调度器串联子技能完成。触发场景：从零写一篇 SCI 论文、系统综述 / Meta 分析、文献检索与循证写作、单细胞与组学分析、结构生物学与药物设计、化学信息学、科学数据库查询（UniProt / PDB / ChEMBL / PubMed 等）、模型训练与微调、GPU 云算力调度、量子计算、科学可视化、同行评审；或用户直接提到 OpenScience、子技能、科研调度、scientific workflows。
 agent_created: true
 license: Apache-2.0
 triggers:
   - OpenScience
   - 科研调度
   - 子技能
+  - 写SCI论文
+  - 从零写论文
+  - 写一篇论文
+  - 系统综述
+  - meta分析
+  - 荟萃分析
+  - 文献检索
+  - 科研入门
   - 单细胞分析
   - 组学分析
   - 药物设计
@@ -30,22 +38,58 @@ triggers:
 
 ---
 
-## 一、三层调度模型
+## 一、四层调度模型
 
 ```
 用户任务
    │
-   ├─ 1. capability routing   dispatch.py query "<关键词>"     → 命中哪几个子技能
-   ├─ 2. skill loading        dispatch.py load <name>          → 拿到 SKILL.md 正文 + 基础目录 + 资源清单
-   └─ 3. tool provisioning     dispatch.py mcp install <id>    → 需要外部系统时按需装 MCP
+   ├─ 0. workflow orchestration  dispatch.py workflow show sci-paper  → 拿到阶段、门控与产物规范
+   ├─ 1. capability routing      dispatch.py query "<关键词>"          → 命中哪几个子技能
+   ├─ 2. skill loading           dispatch.py load <name>               → 拿到 SKILL.md 正文 + 基础目录 + 资源清单
+   └─ 3. tool provisioning       dispatch.py mcp install <id>          → 需要外部系统时按需装 MCP
 ```
+
+**第 0 层是可选的编排层。** 当任务是"从零写一篇论文"这类**跨越多个子技能的长流程**时，先取工作流定义，
+它规定了下游阶段顺序、每阶段的准入与门控、产物文件，以及必须遵守的铁律。单点任务（"帮我把这个蛋白质结构预测一下"）
+不需要第 0 层，直接从第 1 层检索入手。
 
 子技能是**能力**（知道怎么做科研），MCP 是**工具**（能碰到外部系统）。两者职责不重叠：
 子技能告诉你"用什么方法、跑什么代码、如何解读结果"；MCP 让你"真的去 GitHub / 云存储 / GPU 集群上动手"。
 
 ---
 
-## 二、检索引擎
+## 二、端到端工作流
+
+工作流定义放在 `$OSD/workflows/*.md`，由 `dispatch.py workflow` 读取（文件名即 id，无需额外登记）。
+
+| 子命令 | 作用 |
+|---|---|
+| `workflow` / `workflow list` | 列出全部工作流 |
+| `workflow show <id>` | 打印某个工作流的完整定义 |
+
+### 已有工作流
+
+| id | 名称 | 适用 |
+|---|---|---|
+| `sci-paper` | 从零到一篇 SCI 论文初稿 | 零科研基础的本科生 / 研究生，给出题目即可 |
+
+`sci-paper` 的完整定义见 `workflows/sci-paper.md`，**执行前必须完整读一遍**。它规定了：
+
+- **六条铁律**：绝不编造文献、绝不编造数据、先查证再动笔、全程留痕、每步说人话、不确定就问
+- **三条路线**：系统综述 / Meta 分析（默认推荐）、叙述性综述、公开数据库二次分析
+- **十个阶段（Stage 0–9）**：Intake 信息采集 → 可行性查证 → 检索 → PRISMA 筛选 → 数据提取 → 统计 → 图表 → 英文稿 → 反造假审计 → 投稿准备
+- **每阶段的准入条件、要调用的子技能、产物文件、门控条件**
+- **分轮提问设计**（一轮不超过 4 个问题）与"信息已足够"的判据
+- **产物目录规范**与中断恢复方式
+- **每阶段结束的固定四段话术**：做了什么 / 为什么 / 说明什么 / 需要你确认什么
+
+**这条工作流的价值不在于"生成文本"，而在于先问清楚、再查证、最后才动笔。**
+缺少必要信息时必须停下来问用户（一轮 ≤4 个问题）；信息足够（PICO 明确 + 路线确定 + 主要结局明确）
+之后才开始检索。阶段之间可以有简短对话确认方向，但**不许跳过门控**。
+
+---
+
+## 三、检索引擎
 
 统一入口，零第三方依赖，需 Python 3.8+。
 
@@ -71,14 +115,23 @@ triggers:
 | `mcp config` | 显示 MCP 客户端配置文件的实际路径 |
 | `mcp list` | 列出 6 个 MCP 连接器、读写操作与前置要求 |
 | `mcp install <id>` | 生成该连接器的安装方案（默认只打印，`--write` 才落盘） |
+| `workflow show <id>` | 读取端到端工作流定义（见第二节） |
 
 `query` 的排序依据：名称精确匹配 > 名称包含 > 标签 > 描述 > 功能摘要 > 分类。
+匹配按**词边界**进行（`meta` 不会命中 `metabolomics`），而非裸子串。
 中文查询会先做**术语展开**（如「分子对接 打分」→ `molecular docking` + `scoring`）再打分，因为上游技能名与描述是英文优先的。
+展开出的英文**短语**若整体命中某技能的元数据，会获得远高于其组成单词的权重——这保证「meta 分析」命中
+`literature-review` 这类真正相关的技能，而不会被名字里恰好含 `-analysis` 的无关技能挤掉。
+
+⚠️ **检索只索引技能元数据**（名称 / 描述 / 功能 / 标签 / 分类），**不索引 `references/` 与 `assets/` 正文**。
+因此只写在正文里的概念（如 `publication bias`）可能查不到——这是设计边界而非故障：
+此时用 `category` 浏览该领域分类，或直接 `load` 语义相邻的技能（循证写作 → `clinical-decision-support`、`statistical-analysis`）。
+
 `query` 无命中时，先用 `category` 浏览，或换用更贴近上游命名的英文术语。
 
 ---
 
-## 三、路由表（16 分类 / 312 子技能）
+## 四、路由表（16 分类 / 312 子技能）
 
 | 分类 | 数量 | 何时路由到这里 | 代表子技能 |
 |---|---|---|---|
@@ -101,22 +154,23 @@ triggers:
 
 ---
 
-## 四、执行协议
+## 五、执行协议
 
-1. **提关键词**：从任务里抽出领域词 + 动作词（如 `single-cell` + `integration`、`分子对接` + `打分`）。
-2. **检索**：跑 `query`。命中不理想就换英文术语或加 `--category`。
-3. **选 1–3 个**：只挑真正要用的。子技能之间常有明确分工（例如 `anndata` 管数据结构、`scanpy` 管分析流程）。
-4. **载入**：`load <name>`。返回的 `Base directory` 就是该子技能的根，其 `scripts/`、`references/`、`assets/` 都在那里。
-5. **执行**：严格按子技能正文的步骤走；需要跑脚本时，在该 `Base directory` 内用 Bash 运行。
+1. **判流程**：任务是长流程（写论文、完整分析管线）还是单点问题？长流程先 `workflow show <id>` 取编排定义。
+2. **提关键词**：从任务里抽出领域词 + 动作词（如 `single-cell` + `integration`、`分子对接` + `打分`）。
+3. **检索**：跑 `query`。命中不理想就换英文术语或加 `--category`。
+4. **选 1–3 个**：只挑真正要用的。子技能之间常有明确分工（例如 `anndata` 管数据结构、`scanpy` 管分析流程）。
+5. **载入**：`load <name>`。返回的 `Base directory` 就是该子技能的根，其 `scripts/`、`references/`、`assets/` 都在那里。
+6. **执行**：严格按子技能正文的步骤走；需要跑脚本时，在该 `Base directory` 内用 Bash 运行。
    **子技能目录视为只读**——不要往里写文件；产物写到用户工作目录或临时目录。
-6. **补外部工具**：任务需要触达外部系统（GitHub、云存储、托管 GPU、ELN）时，才走第五节的 MCP 流程。
-7. **自检（可选）**：交付前沿用 `research` 类的 `peer-review` / `scholar-evaluation` 做一轮质量复核。
+7. **补外部工具**：任务需要触达外部系统（GitHub、云存储、托管 GPU、ELN）时，才走第六节的 MCP 流程。
+8. **自检（可选）**：交付前沿用 `research` 类的 `peer-review` / `scholar-evaluation` 做一轮质量复核。
 
 **委派**：当流程够长（多子技能串联，或需要读大量数据库）时，把子技能执行丢给子代理，只让主上下文接收结论。这样能避免把每个子技能的全文都堆进主上下文。
 
 ---
 
-## 五、MCP 按需安装协议
+## 六、MCP 按需安装协议
 
 **原则：用户不需要，就不装。** MCP 只在任务确实要触达外部系统时才引入。
 
@@ -173,7 +227,7 @@ export OSD_MCP_CONFIG="$HOME/my-agent/mcp.json"     # bash
 
 ---
 
-## 六、安全边界
+## 七、安全边界
 
 - **写操作默认关闭**。上游 catalog 中 `writes_enabled_by_catalog` 全为 `false`；任何写操作（创建/删除 GPU、改 Issue、动 S3、改文件）都必须先向用户说明再执行。
 - **不代跑未审代码**。`manual_review` 类连接器（Benchling / Dropbox）本包**不会**自动克隆或执行上游仓库——Dropbox 必须固定并审阅 commit 后手工登记。
@@ -185,21 +239,22 @@ export OSD_MCP_CONFIG="$HOME/my-agent/mcp.json"     # bash
 
 ---
 
-## 七、目录结构
+## 八、目录结构
 
 ```
 openscience-dispatcher/
 ├── SKILL.md            ← 本文件（调度协议）
-├── dispatch.py         ← 检索引擎（list / category / query / load / mcp / net）
+├── dispatch.py         ← 检索引擎（list / category / query / load / mcp / net / workflow）
 ├── dispatch.cmd        ← Windows 启动器（自动探测 Python）
 ├── registry.json       ← 312 条子技能索引（名称/分类/描述/功能/标签/路径）
+├── workflows/          ← 端到端工作流定义（文件名即 id，无需登记）
+│   └── sci-paper.md    ← 从零写 SCI 论文：10 阶段 + 门控 + 铁律 + 产物规范
 ├── skills/             ← 312 个子技能，按 16 分类分层
 │   └── <category>/<name>/{SKILL.md, scripts/, references/, assets/}
 ├── mcp/
 │   ├── catalog.json    ← 6 个连接器元数据（转录自上游 catalog.ts）
 │   └── INSTALL.md      ← 安装与网络分流详解
-├── tools/
-│   └── rebuild.py      ← 从上游 OpenScience 源码重建 skills/ 与 registry.json
+├── tools/              ← 维护脚本（rebuild.py 重建 skills/registry；gen_readme.py 生成 README；sources.py 源仓库映射）
 ├── README.md
 ├── CHANGELOG.md
 ├── ATTRIBUTION.md           ← 署名与著作权人分布
@@ -212,7 +267,7 @@ openscience-dispatcher/
 
 ---
 
-## 八、失败与回退
+## 九、失败与回退
 
 | 情况 | 处理 |
 |---|---|
@@ -220,7 +275,12 @@ openscience-dispatcher/
 | 控制台中文乱码 | `dispatch.py` 已强制 UTF-8 输出；若仍乱码，在 cmd 先执行 `chcp 65001` |
 | `query` 无命中 | 先 `category` 浏览；改用上游英文命名；再不行就承认超出子技能覆盖，用通用能力完成，不要硬套 |
 | `load` 名称歧义 | 用返回的候选列表选精确名重试 |
-| 脚本在子技能目录跑失败 | 读该子技能的 `references/` 找依赖与版本要求；缺依赖按第五节网络分流装 |
+| 脚本在子技能目录跑失败 | 读该子技能的 `references/` 找依赖与版本要求；缺依赖按第六节网络分流装 |
 | MCP 连接失败 | `mcp install` 重跑看状态（`connected / disabled / failed / needs_auth / needs_client_registration`）；`needs_auth` 需完成 OAuth |
 | 配置文件写错位置 | `mcp config` 查看实际路径；用 `OSD_MCP_CONFIG` 或 `--config` 指定 |
 | 网络判定异常 | `OPENSCIENCE_REGION=CN|INTL` 强制覆盖后重试 |
+| `workflow show` 找不到 id | 先跑 `workflow list` 看可用 id；工作流文件名即 id |
+| 检索被无关技能占据前排 | 已按词边界 + 短语加权排序；仍不理想时用 `--category` 限定分类缩小范围 |
+| 概念只写在子技能正文里、检索不到 | 检索只索引元数据；改用 `category` 浏览该领域，或直接 `load` 语义相邻技能 |
+| 用户信息不全就想开写 | **停下来问**，一轮 ≤4 个问题；`sci-paper` 的 Stage 0 定义了"信息足够"的判据，禁止在信息不足时进入检索 |
+| 工作流中途被打断 | 读项目目录下 `00-brief.md` 末尾的进度表，从第一个未完成阶段继续，不要从头重做 |
