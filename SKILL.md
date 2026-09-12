@@ -1,6 +1,6 @@
 ---
 name: openscience-dispatcher
-version: 1.3.0
+version: 1.3.1
 description: 综合科研调度器（OpenScience Dispatcher）——把 312 个上游 OpenScience 子技能（16 类：ml-training / biology / databases / llm-tools / chemistry / physics / coding / research / cloud-compute / data-engineering / writing / ml-inference / visualization / quantum / other / document-parsing）加 2 个本包自研子技能（学术搜索 unified-research-finder、Meta 分析图件 meta-analysis-figures），共 314 个，与 7 个按需安装的 MCP 工具，在通用 AI Agent 平台上编排成类 OpenScience 的科研工作流。**内置端到端 SCI 论文工作流**：面向零科研基础的本科生，从一句话题目经信息采集、可行性查证、检索、PRISMA 筛选、数据提取、统计、图表、英文稿、反造假审计到投稿准备，全程由本调度器串联子技能完成。触发场景：从零写一篇 SCI 论文、系统综述 / Meta 分析、森林图 / 漏斗图 / PRISMA 流程图 / 偏倚风险图、文献检索与循证写作（PubMed / Google 学术 / 学术镜像 / 影响因子）、单细胞与组学分析、结构生物学与药物设计、化学信息学、科学数据库查询（UniProt / PDB / ChEMBL / PubMed 等）、模型训练与微调、GPU 云算力调度、量子计算、科学可视化、同行评审；或用户直接提到 OpenScience、子技能、科研调度、scientific workflows。
 agent_created: true
 license: Apache-2.0
@@ -287,7 +287,9 @@ openscience-dispatcher/
 │   ├── aliases.json    ← 给英文元数据的上游技能补中文触发词
 │   ├── patches/        ← 对上游 bug 的最小修复（重建后自动回填）
 │   ├── gen_readme.py   ← 生成 README.md
+│   ├── make_demo_figures.py ← 重建 README 效果图到 docs/figures/
 │   └── sources.py      ← 源仓库映射（上游 / 自研 / MCP）
+├── docs/figures/       ← README 顶部效果图（森林图 / 漏斗图 / PRISMA / RoB 2 / KM）
 ├── README.md
 ├── CHANGELOG.md
 ├── ATTRIBUTION.md           ← 署名与著作权人分布
