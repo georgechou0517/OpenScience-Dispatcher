@@ -1,0 +1,32 @@
+{
+  "_note": [
+    "Retrieval aliases for upstream skills whose metadata is English-only.",
+    "Upstream OpenScience ships English descriptions and often no tags at all, so a",
+    "Chinese query cannot reach them: '科研绘图' never matches a skill whose only words",
+    "are 'publication-ready figures'. rebuild.py merges these extra trigger words into",
+    "registry.json at build time, which keeps the fix durable across rebuilds without",
+    "hand-editing files that the next copy would overwrite. Keys are exact skill names;",
+    "values are tags appended to the existing ones (duplicates are ignored).",
+    "Prefer terms a user would actually type. Keep them specific enough not to collide"
+  ],
+  "scientific-visualization": [
+    "科研绘图", "科研作图", "论文配图", "论文插图", "期刊插图", "可视化",
+    "绘图", "图表", "作图", "figure design",
+    "publication figures", "journal figures", "multi-panel"
+  ],
+  "statistical-analysis": [
+    "统计", "统计分析", "统计检验", "假设检验", "显著性", "样本量", "功效分析",
+    "敏感性分析", "置信区间", "p 值",
+    "statistical test", "power analysis", "sample size", "hypothesis test"
+  ],
+  "venue-templates": [
+    "投稿", "期刊投稿", "期刊模板", "投稿指南", "投稿格式", "LaTeX 模板",
+    "cover letter", "submission guidelines", "manuscript format"
+  ],
+  "matplotlib": [
+    "绘图库", "底层绘图", "自定义绘图", "publication plot"
+  ],
+  "exploratory-data-analysis": [
+    "数据探索", "探索性分析", "数据概览", "EDA"
+  ]
+}

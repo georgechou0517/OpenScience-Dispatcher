@@ -47,6 +47,10 @@ the work of a single author.
 
 **Subtotals: Apache-2.0 = 298 · MIT = 14.**
 
+The counts above cover the 312 upstream sub-skills under `skills/` only. The 2 sub-skills
+added by this package under `local-skills/` are original work (not third-party): see
+[`ATTRIBUTION.md`](ATTRIBUTION.md) for their licenses (Apache-2.0 and MIT-0).
+
 All Apache-2.0 content is covered by the root [`LICENSE`](LICENSE) and [`NOTICE`](NOTICE).
 
 ### 3. MIT-licensed sub-skills — copyright notice required
@@ -169,6 +173,8 @@ copyleft obligation attaches to the bundle as a whole.
    （按上游仓库默认）、Shoko-official 2 篇 —— 合计 **Apache-2.0 共 298 篇**；
    InkVell Inc. 12 篇、Microsoft 1 篇、Andrey Fedorov 1 篇 —— 合计 **MIT 共 14 篇**。
    MIT 部分要求随附版权声明，其作者已记在各文件 frontmatter 中。
+   （以上仅计 `skills/` 下的 312 篇上游子技能；`local-skills/` 下另 2 篇为本包原创，
+   非第三方作品，其许可见 [`ATTRIBUTION.md`](ATTRIBUTION.md)。）
 
 3. **`skills/writing/ml-paper-writing/templates/` 内打包了第三方 LaTeX 宏包**，其中
    natbib、fancyhdr 及四个会议 `.bst` 均为 **LPPL** 授权；`algorithm.sty` 与

@@ -5,9 +5,9 @@
 """生成 openscience-dispatcher 的 README.md。
 
 数据来源：
-  - registry.json      312 条子技能元数据（name / category / description）
+  - registry.json      314 条子技能元数据（name / category / description / origin）
   - tools/sources.py   每个 Skill / MCP 的上游项目与源仓库映射
-  - mcp/catalog.json   6 个 MCP 连接器的元数据
+  - mcp/catalog.json   7 个 MCP 连接器的元数据
 
 用法：
   python tools/gen_readme.py            # 写出仓库根目录的 README.md
@@ -21,7 +21,8 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent
 sys.path.insert(0, str(HERE))
-from sources import URLS, MCP, OSN, REPO, BRANCH  # noqa: E402
+from sources import (URLS, MCP, OSN, REPO, BRANCH,  # noqa: E402
+                     LOCAL_SKILLS, SELF, SELF_REPO)
 
 ORDER = [
     "ml-training", "biology", "databases", "llm-tools", "chemistry", "physics",
@@ -72,7 +73,13 @@ def link_text(url, n=40):
 
 def resolve(name, cat):
     """返回 (项目名, 源仓库 URL)。OSN 技能解析为上游仓库深链。"""
-    label, url = URLS[name]
+    if name in LOCAL_SKILLS:
+        label, url = LOCAL_SKILLS[name]
+        return label, (SELF_REPO if url == SELF else url)
+    entry = URLS.get(name)
+    if entry is None:
+        return "（未登记）", SELF_REPO
+    label, url = entry
     if url != OSN:
         return label, url
     if name == "scholar-evaluation":
@@ -89,21 +96,39 @@ def load():
 
 
 def skill_rows(reg, cat):
-    out, selfmade = [], 0
+    """返回 (表格行, OpenScience 自研数, 本包 local-skills 数)。"""
+    out, selfmade, local = [], 0, 0
     for i, e in enumerate(reg, 1):
         label, url = resolve(e["name"], cat[e["name"]])
-        if label == "OpenScience 自研":
+        if e["name"] in LOCAL_SKILLS:
+            local += 1
+            label = f"**{label}**"
+        elif label == "OpenScience 自研":
             selfmade += 1
         out.append(
             f"| {i} | `{e['name']}` | {LABEL.get(e['category'], e['category'])} "
             f"| {brief(e['description'])} | [{label}]({url}) |"
         )
-    return out, selfmade
+    return out, selfmade, local
+
+
+def local_rows(reg):
+    """本包 local-skills/ 明细表：技能 / 分类 / 用途 / 版本 / 来源。"""
+    out = []
+    for e in sorted(reg, key=lambda x: x["name"]):
+        if e["name"] not in LOCAL_SKILLS:
+            continue
+        label, url = resolve(e["name"], e["category"])
+        out.append(
+            f"| `{e['name']}` | {LABEL.get(e['category'], e['category'])} "
+            f"| {brief(e['description'], 80)} | {e.get('version') or '—'} | [{label}]({url}) |"
+        )
+    return out
 
 
 def mcp_rows():
     out = []
-    order = ["givemeanode", "github", "benchling", "box", "dropbox", "s3"]
+    order = ["givemeanode", "github", "benchling", "box", "dropbox", "s3", "spss"]
     for i, k in enumerate(order, 1):
         nm, pv, url = MCP[k]
         out.append(f"| {i} | **{nm}** | {pv} | [{link_text(url)}]({url}) |")
@@ -122,42 +147,51 @@ def counts(reg):
 
 def main():
     reg, cat = load()
-    missing = [e["name"] for e in reg if e["name"] not in URLS]
+    missing = [e["name"] for e in reg
+               if e["name"] not in URLS and e["name"] not in LOCAL_SKILLS]
     extra = [k for k in URLS if k not in cat]
     if missing or extra:
         print(f"[!] 映射不一致：缺少 {missing[:5]}，多余 {extra[:5]}")
     cnt, cat_rows = counts(reg)
-    srows, selfmade = skill_rows(reg, cat)
+    srows, selfmade, n_local = skill_rows(reg, cat)
+    lrows = local_rows(reg)
     mrows = mcp_rows()
 
+    n_upstream = len(reg) - selfmade - n_local
     doc = TEMPLATE
     for key, val in {
         "@@N_SKILL@@": str(len(reg)),
         "@@N_CAT@@": str(len(cnt)),
         "@@N_MCP@@": str(len(MCP)),
         "@@N_SELFMADE@@": str(selfmade),
-        "@@N_UPSTREAM@@": str(len(reg) - selfmade),
+        "@@N_LOCAL@@": str(n_local),
+        "@@N_UPSTREAM@@": str(n_upstream),
+        "@@N_UPSTREAM_ALL@@": str(selfmade + n_upstream),
         "@@CAT_ROWS@@": "\n".join(cat_rows),
         "@@MAX_CAT@@": f"{cnt.most_common(1)[0][0]}（{cnt.most_common(1)[0][1]}）",
         "@@SKILL_ROWS@@": "\n".join(srows),
+        "@@LOCAL_ROWS@@": "\n".join(lrows) or "| — | — | — | — | — |",
         "@@MCP_ROWS@@": "\n".join(mrows),
     }.items():
         doc = doc.replace(key, val)
 
     if "--check" in sys.argv:
         print(f"校验通过：{len(reg)} skills / {len(cnt)} categories / {len(MCP)} MCP")
-        print(f"  自研 {selfmade} · 依托第三方项目 {len(reg) - selfmade}")
+        print(f"  OpenScience 自研 {selfmade} · 本包 local-skills {n_local} · "
+              f"依托第三方项目 {n_upstream}")
         return
     with open(ROOT / "README.md", "w", encoding="utf-8", newline="\n") as f:
         f.write(doc)
     print(f"已写出 README.md：{len(doc)} 字符 / {len(doc.encode('utf-8'))} 字节")
-    print(f"  {len(reg)} 个 skill（自研 {selfmade} · 第三方 {len(reg) - selfmade}） · {len(MCP)} 个 MCP")
+    print(f"  {len(reg)} 个 skill（上游自研 {selfmade} + 本包 local {n_local} + 依托第三方 {n_upstream}）"
+          f" · {len(MCP)} 个 MCP")
 
 
 TEMPLATE = r"""# OpenScience Dispatcher · 科研综合调度技能
 
 > 把 [OpenScience](https://github.com/synthetic-sciences/openscience) 的 **@@N_SKILL@@ 个科研子技能**与
 > **@@N_MCP@@ 个 MCP 连接器**，装进 WorkBuddy 等通用 AI Agent 平台。
+> 其中 @@N_LOCAL@@ 个技能是本包在前述基础上自行扩展的（见 §5.3）。
 > 子技能是「能力」，MCP 是「工具」，调度器负责把它们路由到你的问题上去。
 
 [中文](#中文) · [English](#english)
@@ -312,7 +346,8 @@ skills
     ├── SKILL.md          ← 关键文件，必须在这一层
     ├── dispatch.cmd
     ├── registry.json
-    ├── skills\           ← @@N_SKILL@@ 个子技能在这里
+    ├── skills\           ← @@N_UPSTREAM_ALL@@ 个上游子技能在这里
+    ├── local-skills\     ← @@N_LOCAL@@ 个本包自研子技能在这里
     ├── mcp\
     └── tools\
 ```
@@ -325,7 +360,7 @@ skills
 
 > 用 OpenScience 帮我查一下二甲双胍对心血管结局的证据
 
-回答里若出现 `pubmed-database`、`literature-review` 这类子技能名，就装好了。
+回答里若出现 `unified-research-finder`、`pubmed-database`、`literature-review` 这类子技能名，就装好了。
 没反应的话，九成是目录层级放错，回第 3 步对一遍。
 
 #### 3.4 日常怎么用：说人话就行
@@ -402,7 +437,7 @@ A：直接删掉 `skills\openscience-dispatcher` 文件夹，无残留。
 
 ### 四、规模：@@N_SKILL@@ 个开源 skill + @@N_MCP@@ 个 MCP
 
-全部内容来自 OpenScience 的源码树，按 **@@N_CAT@@ 个分类**组织：
+内容主要来自 OpenScience 的源码树，按 **@@N_CAT@@ 个分类**组织（另 @@N_LOCAL@@ 个为本包自研）：
 
 | 分类 | 目录 | 数量 |
 |---|---|---:|
@@ -410,9 +445,11 @@ A：直接删掉 `skills\openscience-dispatcher` 文件夹，无残留。
 | **合计** | | **@@N_SKILL@@** |
 
 其中 @@N_UPSTREAM@@ 个技能依托具体的开源项目（如 Scanpy、RDKit、vLLM、Qiskit），
-@@N_SELFMADE@@ 个是 OpenScience 原创的科研方法论与工作流技能。
+@@N_SELFMADE@@ 个是 OpenScience 原创的科研方法论与工作流技能，
+另 @@N_LOCAL@@ 个由本包自行维护（`local-skills/`，不随上游重建覆盖，见 §5.3）。
 
-> 说明：README 上游写作「309 个内置 skills」，本清单以**源码实测**为准，实为 @@N_SKILL@@ 个含 `SKILL.md` 的技能目录。
+> 说明：README 上游写作「309 个内置 skills」，本清单以**源码实测**为准——上游 @@N_UPSTREAM_ALL@@ 个，
+> 加本包自研 @@N_LOCAL@@ 个，共 @@N_SKILL@@ 个含 `SKILL.md` 的技能目录。
 
 <a id="inventory"></a>
 
@@ -430,6 +467,22 @@ A：直接删掉 `skills\openscience-dispatcher` 文件夹，无残留。
 |---:|---|---|---|
 @@MCP_ROWS@@
 
+#### 5.3 本包扩展技能（`local-skills/`，@@N_LOCAL@@ 个）
+
+这 @@N_LOCAL@@ 个技能**不属于上游 OpenScience**，是本包为补齐科研流程里的空缺而自行维护的。
+它们放在独立的 `local-skills/` 目录下：`tools/rebuild.py` 从上游重建时会**原样保留**这些技能
+并重新并入 `registry.json`，所以不会被覆盖，也不需要放进 `tools/patches/`。
+
+| 技能 | 分类 | 用途 | 版本 | 来源 |
+|---|---|---|---|---|
+@@LOCAL_ROWS@@
+
+> `unified-research-finder` 是作者本人的独立项目（MIT-0），本包内置其副本以便调度器统一路由；
+> **以源仓库为准**，需要最新版本时请直接从源仓库获取。
+> `meta-analysis-figures` 为本包自研（Apache-2.0），补齐系统综述 / Meta 分析的四类核心图件：
+> 森林图、漏斗图、PRISMA 2020 流程图、偏倚风险红绿灯图——上游技能库只提供底层绘图能力，
+> 没有这些成品实现。
+
 > 「源仓库」列为该子技能所依托的上游开源项目；标注 **OpenScience 自研** 的条目版权归上游 OpenScience 仓库所有。
 > 表中所有链接均已做 HTTP 可用性校验。
 
@@ -440,7 +493,7 @@ A：直接删掉 `skills\openscience-dispatcher` 文件夹，无残留。
 这份清单能成立，是因为有大量人和项目把东西无偿开放了出来。
 
 **首先感谢 [OpenScience](https://github.com/synthetic-sciences/openscience)（Synthetic Sciences / InkVell Inc.）**——
-@@N_SKILL@@ 个子技能、@@N_MCP@@ 个 MCP 目录与整套科研 Agent 架构都出自这里，
+上游的子技能树、MCP 目录与整套科研 Agent 架构都出自这里，
 以 Apache-2.0 授权，让下游可以合法地把这套能力搬到别的平台。
 
 **感谢 @@N_UPSTREAM@@ 个被封装的开源项目与数据库**，例如：
@@ -465,7 +518,8 @@ Andrey Fedorov（`imaging-data-commons`，1 篇，MIT）。
 Peter Williams（algorithm / algorithmic）、Hal Daumé III、Norman Gray（urlbst），
 以及 AAAI / ACL / COLM / ICLR / ICML / NeurIPS 各会议模板维护者。
 
-**感谢所有 MCP 服务的提供方**：San Francisco Compute（GiveMeANode）、GitHub、Benchling、Box、Dropbox、AWS。
+**感谢所有 MCP 服务的提供方**：San Francisco Compute（GiveMeANode）、GitHub、Benchling、Box、Dropbox、AWS，
+以及社区维护的 [SPSS MCP Server](https://github.com/meteor0620/spss-mcp)（meteor0620，MIT）。
 
 也感谢每一个在深夜修 issue 的维护者——开源不是免费的，只是有人替你付了账单。
 
@@ -482,7 +536,7 @@ Peter Williams（algorithm / algorithmic）、Hal Daumé III、Norman Gray（url
 | [`ATTRIBUTION.md`](ATTRIBUTION.md) | @@N_SKILL@@ 篇子技能的作者与许可分布 |
 | [`THIRD-PARTY-NOTICES.md`](THIRD-PARTY-NOTICES.md) | 内嵌第三方作品清单（MIT / LPPL / 数据条款）与再分发提示 |
 
-**著作权分布**（按 `metadata.skill-author` 实测）：
+**著作权分布**（上游按 `metadata.skill-author` 实测，本地技能按随包 `LICENSE`）：
 
 | 著作权人 | 篇数 | 许可 |
 |---|---:|---|
@@ -492,8 +546,11 @@ Peter Williams（algorithm / algorithmic）、Hal Daumé III、Norman Gray（url
 | InkVell Inc. | 12 | MIT |
 | Microsoft（`markitdown`） | 1 | MIT |
 | Andrey Fedorov（`imaging-data-commons`） | 1 | MIT |
+| GeorgeChou17（`local-skills/meta-analysis-figures`，本包自研） | 1 | Apache-2.0 |
+| GeorgeChou17（`local-skills/unified-research-finder`，作者独立项目副本） | 1 | MIT-0 |
 
-即 **Apache-2.0 = 298 篇 · MIT = 14 篇**；MIT 部分要求保留版权声明，因此本仓库**必须**随附上述署名文件。
+即 **Apache-2.0 = 299 篇 · MIT = 14 篇 · MIT-0 = 1 篇**；MIT 部分要求保留版权声明，
+因此本仓库**必须**随附上述署名文件。MIT-0 不要求署名，此处仍如实标注来源。
 
 **三点务必注意：**
 
@@ -506,7 +563,8 @@ Peter Williams（algorithm / algorithmic）、Hal Daumé III、Norman Gray（url
    许可文件不替代这些条款，请自行确认。
 
 仅调度层（`SKILL.md`、`dispatch.py`、`dispatch.cmd`、`registry.json`、`tools/`、`mcp/INSTALL.md`）
-为本项目原创，同样以 Apache-2.0 分发以保持整体一致。
+与 `local-skills/` 下的自研技能为本项目原创，同样以 Apache-2.0 分发以保持整体一致
+（`local-skills/unified-research-finder` 例外，按作者的 MIT-0 分发）。
 
 > 本文档是基于源码实测整理的合规声明，**不构成法律意见**。若用于商业或融资场景，建议由法务复核。
 
@@ -542,7 +600,8 @@ Windows 下用 `dispatch.cmd` 即可，它会自动探测 `py -3` / `python` / `
 | `mcp plan` | 一次性生成所有可自动安装连接器的方案 |
 
 **设计说明：为什么 @@N_SKILL@@ 个子技能不会被误注册**
-子技能位于 `skills/<分类>/<技能>/SKILL.md`（相对技能根目录的第 4 层）。
+子技能位于 `skills/<分类>/<技能>/SKILL.md`（相对技能根目录的第 4 层），
+本包自研技能位于 `local-skills/<分类>/<技能>/SKILL.md`（同样是第 4 层）。
 主流 Agent 平台的技能发现是**单层**的（只扫描 `<skills>/<名称>/SKILL.md`），
 因此它们不会被当成 @@N_SKILL@@ 个顶层技能，也不会拖慢平台启动——
 只能通过本调度器访问，这正是设计意图。
@@ -551,9 +610,17 @@ Windows 下用 `dispatch.cmd` 即可，它会自动探测 `py -3` / `python` / `
 
 ```bash
 git clone https://github.com/synthetic-sciences/openscience
-python tools/rebuild.py --source ./openscience   # 重建 skills/ 与 registry.json
+python tools/rebuild.py --source ./openscience   # 重建 skills/ 与 registry.json（含 local-skills/ 并入）
 python tools/gen_readme.py                       # 重新生成本清单
 ```
+
+重建时 `skills/` 会被上游文件逐字节覆盖，所以**直接改 `skills/` 里的文件会在下次重建时丢失**。
+两类改动各有归宿：
+
+| 改动类型 | 放在哪 | 谁来落回去 |
+|---|---|---|
+| 修上游技能里的 bug | `tools/patches/<同名相对路径>` | `tools/rebuild.py` 末尾自动调用 `tools/apply_patches.py` |
+| 新增/自有技能 | `local-skills/<分类>/<技能>/` | `tools/rebuild.py` 自动并入 `registry.json`，文件不动 |
 
 **网络自适应**：`dispatch.py` 按 IP 判定区域，自动在 npm / PyPI / GitHub / Docker 的
 国内镜像与国际站之间选择。
@@ -709,7 +776,8 @@ tooling, and state four things clearly:
 
 **@@N_SKILL@@ skills across @@N_CAT@@ categories + @@N_MCP@@ MCP connectors.**
 Of these, @@N_UPSTREAM@@ wrap a concrete open-source project and @@N_SELFMADE@@ are
-OpenScience's own methodology / workflow skills.
+OpenScience's own methodology / workflow skills; a further @@N_LOCAL@@ are maintained by
+this package under `local-skills/` (see §5.3).
 
 The per-skill inventory with source-repository links lives in
 [§5.1 above](#inventory) — it is generated from `registry.json` and `tools/sources.py`,
@@ -718,8 +786,8 @@ and every link is HTTP-verified.
 ### 5. Acknowledgements
 
 Above all, **[OpenScience](https://github.com/synthetic-sciences/openscience)** (Synthetic Sciences /
-InkVell Inc.) — all @@N_SKILL@@ sub-skills, the MCP catalogue and the research-agent architecture
-originate there under Apache-2.0.
+InkVell Inc.) — the @@N_UPSTREAM_ALL@@ upstream sub-skills, the MCP catalogue and the research-agent
+architecture originate there under Apache-2.0.
 
 Thanks also to the @@N_UPSTREAM@@ open-source projects and public databases these skills wrap
 (Scanpy, RDKit, Biopython, PyTorch, Hugging Face, vLLM, Qiskit, Astropy, PubMed, UniProt, PDB,
@@ -735,7 +803,8 @@ Norman Gray) and venue template maintainers, and to every MCP provider
 Distributed under **Apache-2.0**. See [`LICENSE`](LICENSE), [`NOTICE`](NOTICE),
 [`ATTRIBUTION.md`](ATTRIBUTION.md) and [`THIRD-PARTY-NOTICES.md`](THIRD-PARTY-NOTICES.md).
 
-- **Apache-2.0 = 298 sub-skills · MIT = 14** (the MIT part requires retaining its copyright notice).
+- **Apache-2.0 = 299 · MIT = 14 · MIT-0 = 1** (MIT requires retaining its copyright notice;
+  MIT-0 does not require attribution, but the source is credited here anyway).
 - The `license:` field inside each sub-skill's frontmatter describes **the third-party library the skill
   documents**, not this repository. No GPL/LGPL/CeCILL source is bundled.
 - Third-party **LaTeX packages (mostly LPPL)** are bundled under
@@ -771,6 +840,11 @@ git clone https://github.com/synthetic-sciences/openscience
 python tools/rebuild.py --source ./openscience   # rebuild skills/ and registry.json
 python tools/gen_readme.py                       # regenerate this inventory
 ```
+
+Two kinds of local change survive a rebuild, each in its own place: a fix to an upstream
+skill goes into `tools/patches/<same relative path>` (re-applied automatically at the end
+of `rebuild.py`), while a new or self-authored skill goes into `local-skills/<category>/<name>/`
+and is merged into `registry.json` with `origin: local`. Editing `skills/` directly does not.
 
 MCP writes are opt-in: the plan is printed by default, `--write` persists with an automatic
 backup. Config path precedence is `--config` > `$OSD_MCP_CONFIG` > `~/.workbuddy/mcp.json`;

@@ -170,5 +170,52 @@
    "url": "https://aws-mcp.us-east-1.api.aws/mcp?oauth=initialize",
    "oauth": "auto"
   }
+ },
+ {
+  "id": "spss",
+  "name": "IBM SPSS Statistics",
+  "provider": "meteor0620 (community)",
+  "recommended": false,
+  "status": "manual_review",
+  "summary": "Community MCP server that drives a locally installed IBM SPSS Statistics engine: instant .sav I/O through pyreadstat, plus statistical procedures executed by one persistent SPSS process that keeps datasets alive across calls.",
+  "source_url": "https://github.com/meteor0620/spss-mcp",
+  "reviewed_at": "2026-09-12",
+  "read_operations": [
+   "Variable dictionary: names, labels, formats, value labels, measurement level, row count",
+   "Data rows previewed as CSV, limited by row and column",
+   ".sav to CSV and CSV to .sav conversion",
+   "Statistical procedure output tables returned as text"
+  ],
+  "upstream_write_operations": [
+   "Writes new .sav files when converting CSV input",
+   "Executes arbitrary SPSS syntax, and arbitrary Python inside the SPSS Python integration"
+  ],
+  "writes_enabled_by_catalog": false,
+  "safety": "This is an unreviewed community server rather than a vendor endpoint, so it is catalogued manual_review: the dispatcher will not clone, install or run it for you. Install it yourself from a pinned commit and inspect the registered tool list before approving any call. Anything it accepts runs against a real SPSS engine on your machine, so treat run-syntax and run-python as code execution. Review the generated .sps before letting it run, and prefer read-only analysis.",
+  "requirements": [
+   "Windows with IBM SPSS Statistics installed together with its Python integration plugin (Python3\\python.exe under the SPSS installation directory)",
+   "Python 3.10+ on PATH, with pyreadstat installed",
+   "The real local path to mcp_server.py; set SPSS_PY when SPSS is not in its default location, and SPSS_CALL_TIMEOUT to raise the per-call timeout"
+  ],
+  "install_steps": [
+   "git clone https://github.com/meteor0620/spss-mcp && cd spss-mcp",
+   "安装唯一依赖：pip install pyreadstat --index-url <上方 PyPI 镜像>",
+   "把 mcp_server.py 与 spsscli.py 复制到一个固定目录（例如 %USERPROFILE%\\.spss-mcp）",
+   "把下方配置里的 <安装目录> 换成该真实路径——含占位符时本工具会拒绝写入",
+   "重启客户端，确认 spss_dict / spss_run_syntax / spss_reset_engine 等工具已出现"
+  ],
+  "setup": {
+   "type": "local",
+   "name": "spss",
+   "command": "python",
+   "args": ["<安装目录>\\mcp_server.py"]
+  },
+  "alternatives": [
+   {
+    "name": "Exekiel179/SPSS-MCP",
+    "url": "https://github.com/Exekiel179/SPSS-MCP",
+    "note": "36 个高层语义工具（spss_t_test / spss_anova / spss_regression / Cox 等），并附 spss-analyst 工作流技能，上手门槛更低。未选原因：自 2026-04 起无新提交；其 configure-claude 会改写 Claude Code 专属的 ~/.claude.json，与本包通用的 mcpServers 模型不合；预置工具越多，单点 bug 的暴露面越大。若你更想要开箱即用的命名工具而不想自己写 SPSS 语法，它同样可用，按同一流程手工登记即可。"
+   }
+  ]
  }
 ]

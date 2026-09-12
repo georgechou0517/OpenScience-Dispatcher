@@ -1,7 +1,7 @@
 ---
 name: openscience-dispatcher
-version: 1.2.0
-description: 综合科研调度器（OpenScience Dispatcher）——把 312 个 OpenScience 子技能（16 类：ml-training / biology / databases / llm-tools / chemistry / physics / coding / research / cloud-compute / data-engineering / writing / ml-inference / visualization / quantum / other / document-parsing）与 6 个按需安装的 MCP 工具，在通用 AI Agent 平台上编排成类 OpenScience 的科研工作流。**内置端到端 SCI 论文工作流**：面向零科研基础的本科生，从一句话题目经信息采集、可行性查证、检索、PRISMA 筛选、数据提取、统计、图表、英文稿、反造假审计到投稿准备，全程由本调度器串联子技能完成。触发场景：从零写一篇 SCI 论文、系统综述 / Meta 分析、文献检索与循证写作、单细胞与组学分析、结构生物学与药物设计、化学信息学、科学数据库查询（UniProt / PDB / ChEMBL / PubMed 等）、模型训练与微调、GPU 云算力调度、量子计算、科学可视化、同行评审；或用户直接提到 OpenScience、子技能、科研调度、scientific workflows。
+version: 1.3.0
+description: 综合科研调度器（OpenScience Dispatcher）——把 312 个上游 OpenScience 子技能（16 类：ml-training / biology / databases / llm-tools / chemistry / physics / coding / research / cloud-compute / data-engineering / writing / ml-inference / visualization / quantum / other / document-parsing）加 2 个本包自研子技能（学术搜索 unified-research-finder、Meta 分析图件 meta-analysis-figures），共 314 个，与 7 个按需安装的 MCP 工具，在通用 AI Agent 平台上编排成类 OpenScience 的科研工作流。**内置端到端 SCI 论文工作流**：面向零科研基础的本科生，从一句话题目经信息采集、可行性查证、检索、PRISMA 筛选、数据提取、统计、图表、英文稿、反造假审计到投稿准备，全程由本调度器串联子技能完成。触发场景：从零写一篇 SCI 论文、系统综述 / Meta 分析、森林图 / 漏斗图 / PRISMA 流程图 / 偏倚风险图、文献检索与循证写作（PubMed / Google 学术 / 学术镜像 / 影响因子）、单细胞与组学分析、结构生物学与药物设计、化学信息学、科学数据库查询（UniProt / PDB / ChEMBL / PubMed 等）、模型训练与微调、GPU 云算力调度、量子计算、科学可视化、同行评审；或用户直接提到 OpenScience、子技能、科研调度、scientific workflows。
 agent_created: true
 license: Apache-2.0
 triggers:
@@ -15,6 +15,8 @@ triggers:
   - meta分析
   - 荟萃分析
   - 文献检索
+  - 学术搜索
+  - 找文献
   - 科研入门
   - 单细胞分析
   - 组学分析
@@ -25,13 +27,16 @@ triggers:
   - GPU 算力
   - 量子计算
   - 科学可视化
+  - 森林图
+  - PRISMA
+  - SPSS
   - 论文写作
   - 同行评审
 ---
 
 # OpenScience Dispatcher
 
-把 312 个科研子技能当作**可检索的能力库**，把 6 个 MCP 连接器当作**按需安装的外部工具**，由本调度器统一路由、加载、执行。
+把 314 个科研子技能当作**可检索的能力库**（312 个上游 + 2 个本包自研），把 7 个 MCP 连接器当作**按需安装的外部工具**，由本调度器统一路由、加载、执行。
 
 本文件所在目录记作 `$OSD`（即本包根目录）。安装到 Agent 平台后通常位于 `<用户目录>/.workbuddy/skills/openscience-dispatcher`。
 所有命令都在 `$OSD` 内执行；**不要**把 `$OSD/skills/**/SKILL.md` 当作顶层技能去调用——它们只能经调度器访问。
@@ -113,7 +118,7 @@ triggers:
 | `list --json` | 全量导出（脚本消费用） |
 | `net` | 显示网络区域判定与镜像源映射 |
 | `mcp config` | 显示 MCP 客户端配置文件的实际路径 |
-| `mcp list` | 列出 6 个 MCP 连接器、读写操作与前置要求 |
+| `mcp list` | 列出 7 个 MCP 连接器、读写操作与前置要求 |
 | `mcp install <id>` | 生成该连接器的安装方案（默认只打印，`--write` 才落盘） |
 | `workflow show <id>` | 读取端到端工作流定义（见第二节） |
 
@@ -123,15 +128,28 @@ triggers:
 展开出的英文**短语**若整体命中某技能的元数据，会获得远高于其组成单词的权重——这保证「meta 分析」命中
 `literature-review` 这类真正相关的技能，而不会被名字里恰好含 `-analysis` 的无关技能挤掉。
 
+中文**标签**按命中方式分两档：技能自己声明的中文标签（如自研技能 `unified-research-finder` 的「找文献」）
+命中时权重最高；仅作为某个**更长标签的子串**命中时权重很低。中文没有词边界，若不区分，
+查询「我要找文献」里的「文献」会误命中 `literature-review` 的别名标签「文献综述」，把用户的学术搜索技能挤到第二。
+
+⚠️ **上游技能多为英文元数据、且常常没有标签**，中文查询因此天然搜不到它们（「科研绘图」匹配不了
+`publication-ready figures`）。本包用 `tools/aliases.json` 在**构建期**为这些技能补上中文触发词
+（如 `scientific-visualization` ← 科研绘图 / 绘图 / 图表；`statistical-analysis` ← 样本量 / 敏感性分析；
+`venue-templates` ← 投稿），由 `rebuild.py` 合并进 `registry.json`——这样修复是持久的，
+不会因为下一次重建覆盖上游目录而丢失。
+
 ⚠️ **检索只索引技能元数据**（名称 / 描述 / 功能 / 标签 / 分类），**不索引 `references/` 与 `assets/` 正文**。
 因此只写在正文里的概念（如 `publication bias`）可能查不到——这是设计边界而非故障：
 此时用 `category` 浏览该领域分类，或直接 `load` 语义相邻的技能（循证写作 → `clinical-decision-support`、`statistical-analysis`）。
+若某个上游技能对中文查询反复搜不到，最干净的修法是往 `tools/aliases.json` 给它加一条中文别名，而不是改上游文件。
 
 `query` 无命中时，先用 `category` 浏览，或换用更贴近上游命名的英文术语。
 
 ---
 
-## 四、路由表（16 分类 / 312 子技能）
+## 四、路由表（16 分类 / 314 子技能：上游 312 + 本包自研 2）
+
+> 自研子技能（`origin: local`，位于 `local-skills/`）在表中以 **(自研)** 标出。
 
 | 分类 | 数量 | 何时路由到这里 | 代表子技能 |
 |---|---|---|---|
@@ -142,13 +160,13 @@ triggers:
 | `chemistry` | 23 | 分子性质、对接、从头设计 | datamol, deepchem, diffdock, admet-prediction |
 | `physics` | 23 | 天体物理、PDE、动力系统、量纲分析 | astropy, fluid-dynamics, bayesian-inference, dimensional-analysis |
 | `coding` | 20 | 通用工程能力、EDA、优化、MATLAB | exploratory-data-analysis, matlab, multi-objective-optimization, arboreto |
-| `research` | 18 | 科研方法论、假设生成、评审、市场调研 | conducting-scientific-research, hypothesis-generation, peer-review, perplexity-search |
+| `research` | 19 | 科研方法论、假设生成、评审、**学术检索**、市场调研 | **unified-research-finder(自研)**, conducting-scientific-research, hypothesis-generation, peer-review, perplexity-search |
 | `other` | 16 | 元能力：上下文/目标/交接/检查点/资源盘点 | context, goal, handoff, checkpoint, compact |
 | `cloud-compute` | 11 | 租 GPU / 无服务器 / 多云编排 | modal-serverless-gpu, runpod-gpu-cloud, skypilot-multi-cloud-orchestration, lambda-gpu-cloud |
 | `data-engineering` | 10 | 大数据帧、地理空间、数据集、格式转换 | polars, dask, geopandas, hugging-face-datasets |
 | `writing` | 10 | 论文/海报/引用/文献综述/投稿 | ml-paper-writing, latex-posters, citation-management, literature-review |
 | `ml-inference` | 9 | 推理服务、量化、可观测性 | serving-llms-vllm, llama-cpp, gguf-quantization, sglang |
-| `visualization` | 8 | 科研绘图、示意图、DNA/蛋白图 | matplotlib, plotly, scientific-schematics, protein-diagram |
+| `visualization` | 9 | 科研绘图、示意图、DNA/蛋白图、**Meta 分析图件** | **meta-analysis-figures(自研)**, matplotlib, plotly, scientific-schematics, protein-diagram |
 | `quantum` | 4 | 量子线路与模拟 | qiskit, cirq, pennylane, qutip |
 | `document-parsing` | 1 | 文档解析 | liteparse |
 
@@ -207,7 +225,7 @@ export OSD_MCP_CONFIG="$HOME/my-agent/mcp.json"     # bash
 
 判定失败时**保守默认中国大陆镜像**。可用环境变量 `OPENSCIENCE_REGION=CN|INTL` 强制覆盖。
 
-### 六个连接器
+### 七个连接器
 
 | id | 名称 | 类型 | 状态 | 写操作 |
 |---|---|---|---|---|
@@ -217,6 +235,13 @@ export OSD_MCP_CONFIG="$HOME/my-agent/mcp.json"     # bash
 | `box` | Box | 远程托管 | official_setup | 文件/元数据、Hub、Doc Gen 变更 |
 | `dropbox` | Dropbox | 本地进程 | manual_review（需固定 commit） | 无 |
 | `s3` | Amazon S3 | 远程托管 | official_setup | IAM 允许时含 S3 变更 |
+| `spss` | IBM SPSS Statistics | 本地进程（社区） | manual_review（需自装 SPSS） | 任意 SPSS 语法 / SPSS 内嵌 Python 执行 |
+
+> **为什么选 `meteor0620/spss-mcp` 而不是 `Exekiel179/SPSS-MCP`**：前者用 pyreadstat 做 `.sav` 即时读写、
+> 单个持久 SPSS 引擎跨调用保持数据集、工具面收敛（7 个），且仍在维护；后者的 `configure-claude`
+> 会改写 Claude Code 专属的 `~/.claude.json`，不适配通用 `mcpServers` 模型，且已久未更新。
+> 两者都只支持 Windows + 已装 SPSS，故一律登记为 `manual_review`，**不会自动克隆或安装**。
+> `spss` 的配置命令含 `<安装目录>` 占位符——**本工具检测到占位符时会拒绝写入**，避免登记一个永远连不上的服务器。
 
 **注意**：远程连接器只需登记 URL，**不涉及下载**，因此网络分流对它们不生效；网络分流只在本地进程类（如 Dropbox 的 git/uv 安装）和用户自定义 MCP 上起作用。
 
@@ -230,11 +255,11 @@ export OSD_MCP_CONFIG="$HOME/my-agent/mcp.json"     # bash
 ## 七、安全边界
 
 - **写操作默认关闭**。上游 catalog 中 `writes_enabled_by_catalog` 全为 `false`；任何写操作（创建/删除 GPU、改 Issue、动 S3、改文件）都必须先向用户说明再执行。
-- **不代跑未审代码**。`manual_review` 类连接器（Benchling / Dropbox）本包**不会**自动克隆或执行上游仓库——Dropbox 必须固定并审阅 commit 后手工登记。
+- **不代跑未审代码**。`manual_review` 类连接器（Benchling / Dropbox / SPSS）本包**不会**自动克隆或执行上游仓库——Dropbox 必须固定并审阅 commit 后手工登记；SPSS 需用户自装 SPSS 并替换配置里的真实路径。
 - **不猜凭据、不存凭据**。Benchling 的租户地址需用户提供；OAuth 走浏览器回环，本包不接触 token 明文。
 - **不预授权**。每次 MCP 工具调用都过一次权限边界；不要为了省事批量批准。
 - **计费资源需显式确认**。GPU 类连接器在批准前先确认计费上限。
-- 子技能目录只读；整体以 Apache-2.0 分发，见 `LICENSE`、`NOTICE`、`ATTRIBUTION.md` 与 `THIRD-PARTY-NOTICES.md`。
+- `skills/` 子技能目录只读（重建会覆盖），要修上游内容走 `tools/patches/`；`local-skills/` 可直接编辑。整体以 Apache-2.0 分发，见 `LICENSE`、`NOTICE`、`ATTRIBUTION.md` 与 `THIRD-PARTY-NOTICES.md`。
 - **注意**：子技能 frontmatter 里的 `license:` 字段描述的是**它所讲授的第三方库**的许可（如 `etetoolkit → GPL-3.0` 指 ETE 工具包），**不是**该技能或本仓库的许可声明；本包未内嵌任何 GPL/LGPL/CeCILL 源码。
 
 ---
@@ -246,15 +271,23 @@ openscience-dispatcher/
 ├── SKILL.md            ← 本文件（调度协议）
 ├── dispatch.py         ← 检索引擎（list / category / query / load / mcp / net / workflow）
 ├── dispatch.cmd        ← Windows 启动器（自动探测 Python）
-├── registry.json       ← 312 条子技能索引（名称/分类/描述/功能/标签/路径）
+├── registry.json       ← 314 条子技能索引（名称/分类/描述/功能/标签/路径/origin）
 ├── workflows/          ← 端到端工作流定义（文件名即 id，无需登记）
 │   └── sci-paper.md    ← 从零写 SCI 论文：10 阶段 + 门控 + 铁律 + 产物规范
-├── skills/             ← 312 个子技能，按 16 分类分层
+├── skills/             ← 312 个**上游**子技能，按 16 分类分层（每次重建覆盖，勿手改）
 │   └── <category>/<name>/{SKILL.md, scripts/, references/, assets/}
+├── local-skills/       ← 2 个**本包自研**子技能（手动维护，重建不覆盖）
+│   ├── research/unified-research-finder/    ← 学术搜索（PubMed / Google 学术 / 镜像 / 影响因子）
+│   └── visualization/meta-analysis-figures/ ← 森林图 / 漏斗图 / PRISMA 2020 / 偏倚风险红绿灯
 ├── mcp/
-│   ├── catalog.json    ← 6 个连接器元数据（转录自上游 catalog.ts）
+│   ├── catalog.json    ← 7 个连接器元数据（转录自上游 catalog.ts + 社区 SPSS）
 │   └── INSTALL.md      ← 安装与网络分流详解
-├── tools/              ← 维护脚本（rebuild.py 重建 skills/registry；gen_readme.py 生成 README；sources.py 源仓库映射）
+├── tools/              ← 维护脚本
+│   ├── rebuild.py      ← 重建 skills/ 与 registry.json（含 local-skills 合并 + 别名覆盖）
+│   ├── aliases.json    ← 给英文元数据的上游技能补中文触发词
+│   ├── patches/        ← 对上游 bug 的最小修复（重建后自动回填）
+│   ├── gen_readme.py   ← 生成 README.md
+│   └── sources.py      ← 源仓库映射（上游 / 自研 / MCP）
 ├── README.md
 ├── CHANGELOG.md
 ├── ATTRIBUTION.md           ← 署名与著作权人分布
@@ -264,6 +297,8 @@ openscience-dispatcher/
 ```
 
 子技能保持上游 `<分类>/<技能>/` 的原始分层，因此可以直接与上游做目录级 diff 或整目录替换。
+**两类目录的维护方式不同**：`skills/` 每次重建都会被上游覆盖，要修就改 `tools/patches/`；
+`local-skills/` 是自研内容，直接编辑即可。二者最终都汇入 `registry.json`。
 
 ---
 
@@ -281,6 +316,9 @@ openscience-dispatcher/
 | 网络判定异常 | `OPENSCIENCE_REGION=CN|INTL` 强制覆盖后重试 |
 | `workflow show` 找不到 id | 先跑 `workflow list` 看可用 id；工作流文件名即 id |
 | 检索被无关技能占据前排 | 已按词边界 + 短语加权排序；仍不理想时用 `--category` 限定分类缩小范围 |
+| 某个上游技能中文搜不到 | 上游元数据多为英文、常无标签；往 `tools/aliases.json` 给它加一条中文别名，再 `rebuild.py --no-copy` |
 | 概念只写在子技能正文里、检索不到 | 检索只索引元数据；改用 `category` 浏览该领域，或直接 `load` 语义相邻技能 |
+| 自研技能在重建后消失 | 确认它在 `local-skills/` 下且未被同名上游技能遮蔽；`rebuild.py` 会打印 local 合并条数 |
+| `mcp install --write` 拒绝写入 | 配置里还有 `<...>` 占位符；先把路径换成真实值再登记 |
 | 用户信息不全就想开写 | **停下来问**，一轮 ≤4 个问题；`sci-paper` 的 Stage 0 定义了"信息足够"的判据，禁止在信息不足时进入检索 |
 | 工作流中途被打断 | 读项目目录下 `00-brief.md` 末尾的进度表，从第一个未完成阶段继续，不要从头重做 |

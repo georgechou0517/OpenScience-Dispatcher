@@ -1,5 +1,60 @@
 # Changelog
 
+## 1.3.0
+
+新增**本地技能层**与两项自研能力，接入学术搜索与 SPSS，并系统性修复中文检索。
+
+- **新增 `local-skills/` 本地技能层**：本包自研技能放这里，`rebuild.py` 只把它们并入
+  `registry.json`（标 `origin: local`），**绝不覆盖**——与 `tools/patches/`（修上游 bug）
+  职责分离：一个装自己的东西，一个补上游的东西。
+- **自研技能 `unified-research-finder`**（research）：整合学术搜索技能，覆盖 PubMed 官方
+  E-utilities（真实 PMID / 摘要 / DOI）与 Google 学术及其镜像站（灯塔 / 烂番薯 / KipHub /
+  学术搜索Pro / 香港镜像），按优先级自动回退，另提供影响因子与引用查询。**找不到就是找不到，
+  绝不编造。** 已设为 `sci-paper` Stage 1/2 的**首选检索**。
+- **自研技能 `meta-analysis-figures`**（visualization）：补齐上游只提供底层 matplotlib 的空档，
+  用可复现脚本从 CSV / 计数直接产出**森林图、漏斗图、PRISMA 2020 流程图、偏倚风险红绿灯图**
+  （RoB 2 / ROBINS-I），内置数值一致性校验（置信区间填反、点估计越界、计数自相矛盾时拒绝出图）。
+  已设为 `sci-paper` Stage 6 的**首选出图**。
+- **新增第 7 个 MCP 连接器 `spss`**（社区 `meteor0620/spss-mcp`，`manual_review`）：
+  在 `catalog.json` 中记录了选型理由（对比 `Exekiel179/SPSS-MCP`：pyreadstat 即时读写、
+  单引擎持久会话、工具面收敛、仍在维护；后者的 `configure-claude` 改写 Claude Code 专属
+  `~/.claude.json`，不适配通用 `mcpServers`）。**新增占位符守卫**：配置里还有 `<...>` 时
+  `mcp install --write` 直接拒绝写入，避免登记一个永远连不上的服务器。
+- **检索修复（四项）**：
+  1. `rebuild.py` 的 frontmatter 解析器此前会把 `description: >-` 这类**折叠标量截断在第一行**，
+     静默掏空该技能的检索索引（本包自研技能正用这种写法）——已支持 `>` / `|` / `>-` / `|-` 等；
+  2. 中文**标签**改为分档计分：技能自己声明的中文标签权重最高，仅作为更长标签**子串**命中时
+     权重很低（中文没有词边界，否则「文献」会误命中「文献综述」，把自研检索技能挤到第二）；
+  3. 新增 `tools/aliases.json` + `rebuild.py` 别名合并：上游技能多为英文元数据、常常无标签，
+     中文查询天然搜不到，构建期为它们补中文触发词（`scientific-visualization` ← 科研绘图 / 绘图 /
+     图表；`statistical-analysis` ← 样本量 / 敏感性分析；`venue-templates` ← 投稿）；
+  4. 展开出的英文**短语**按特异性折扣，避免单个翻译词把自研技能顶掉。
+- 计数更新：**312 → 314** 个技能（上游 312 + 自研 2），**6 → 7** 个 MCP；`SKILL.md` / `README.md`
+  / 路由表 / 目录结构同步更新，`sci-paper` 的检索与出图阶段改指自研技能。
+
+## 1.2.1
+
+修复上游生存分析脚本的五个缺陷，并新增本地补丁层防止重建时被覆盖。
+
+对 `generate_survival_analysis.py`（Kaplan-Meier 报告生成器）实测发现：**在当前 lifelines 上
+直接崩溃**，且即使不崩溃也会输出经不起审稿的数值。已全部修复：
+
+1. **崩溃**：置信区间列名硬编码为 `KM_estimate_lower_0.95`，但 lifelines 一旦收到 `label=`
+   就会把列名改成 `<组名>_lower_0.95`，任何带标签的拟合都 `KeyError`。改为按子串动态取列。
+2. **方法学错误**：中位生存期的置信区间取自**生存概率**的置信带，于是打印出
+   `16.7 months (95% CI 0.4-0.6)`——把概率区间标成了月份。改为 Brookmeyer-Crowley 构造
+   （置信带与 S(t)=0.5 的交叉时间），现输出 `16.7 months (95% CI 10.3-24.3)`。
+3. **参数失效**：`generate_report()` 硬编码标题，导致 `-t/-x/-y/--time-col/--event-col/--group-col`
+   全部被静默忽略。已透传；`patient_id` 也不再是必需列（下游从不使用）。
+4. **表述错误**：效应量对两个方向都用 `(1 - hr)`，HR=1.48 被写成
+   `Control has -48% increase in risk`。已按方向分支修正为 `48% increase in risk`。
+5. **观感缺陷**：log-rank p 值画在 `(0.02, 0.15)`，被左下图例遮住，已移至 `(0.02, 0.97)`。
+
+- 新增 `tools/patches/` + `tools/apply_patches.py`：`skills/` 是上游树的逐字节拷贝，
+  直接修 `skills/` 会在下次 `rebuild.py` 被覆盖；补丁层保存修正版并按相对路径回写。
+  `rebuild.py` 现于重建末尾自动调用它（`--no-copy` 时跳过）。
+- 新增 `tools/patches/README.md`：记录每个补丁的缺陷、症状与修法。
+
 ## 1.2.0
 
 新增端到端工作流层，主打「从零写一篇 SCI 论文」。
