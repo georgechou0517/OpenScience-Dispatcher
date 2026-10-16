@@ -328,8 +328,13 @@ def write_manifest(out, records):
     )
     text = json.dumps(head, ensure_ascii=False, indent=2).rstrip()
     assert text.endswith("}")
+    # newline="\n" is load-bearing: Path.write_text defaults to os.linesep, which on
+    # Windows silently rewrites every LF as CRLF. The repo stores LF (see
+    # .gitattributes) and manifest.json records byte sizes, so a CRLF manifest is a
+    # different file from the one git committed even though `git status` stays clean.
     (out / MANIFEST_NAME).write_text(
-        text[:-1].rstrip() + ',\n  "skills": {\n' + body + "\n  }\n}\n", encoding="utf-8")
+        text[:-1].rstrip() + ',\n  "skills": {\n' + body + "\n  }\n}\n",
+        encoding="utf-8", newline="\n")
     print(f"[rebuild] manifest: {len(skills)} skill(s) / {files} file(s) / "
           f"{total / 1048576:.1f} MB on-demand payload → {MANIFEST_NAME}")
     return skills
@@ -400,7 +405,7 @@ def main():
             print(f"[rebuild] WARNING: alias target(s) not found: {', '.join(missing)}", file=sys.stderr)
 
     (out / "registry.json").write_text(
-        json.dumps(records, ensure_ascii=False, indent=2), encoding="utf-8")
+        json.dumps(records, ensure_ascii=False, indent=2), encoding="utf-8", newline="\n")
 
     print(f"[rebuild] source : {src}")
     print(f"[rebuild] skills : {len(records)} records, {copied} folders copied")
