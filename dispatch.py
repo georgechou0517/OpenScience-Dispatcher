@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # SPDX-License-Identifier: Apache-2.0
-# Part of OpenScience Dispatcher (dispatcher layer). Upstream content and full notices:/n# see LICENSE, NOTICE, ATTRIBUTION.md, THIRD-PARTY-NOTICES.md.
+# Part of OpenScience Dispatcher (dispatcher layer). Upstream content and full notices:/n# see LICENSE.md, NOTICE.md, ATTRIBUTION.md, THIRD-PARTY-NOTICES.md.
 """OpenScience Dispatcher - retrieval engine for the bundled sub-skill tree and MCP connectors.
 
 Semantics mirror OpenScience's single `skill` tool (name | query | category), plus an

@@ -59,7 +59,7 @@
 Unified-Research-Finder/
 ├── SKILL.md                # 技能说明（触发词、检索流程、输出模板）
 ├── CHANGELOG.md            # 更新日志
-├── LICENSE                 # MIT-0 开源协议
+├── LICENSE.md              # MIT-0 开源协议
 ├── README.md               # 本说明文件（中英双语）
 ├── .gitignore              # 忽略 Python 缓存等无关文件
 ├── scripts/
@@ -129,7 +129,7 @@ The skill searches both databases, merges and deduplicates, and tells you "cross
 Unified-Research-Finder/
 ├── SKILL.md                # Skill manifest (triggers, search flows, output templates)
 ├── CHANGELOG.md            # Changelog
-├── LICENSE                 # MIT-0 license
+├── LICENSE.md              # MIT-0 license
 ├── README.md               # This file (bilingual)
 ├── .gitignore              # Excludes Python caches and unrelated files
 ├── scripts/

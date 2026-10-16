@@ -3,7 +3,7 @@
 > 把 [OpenScience](https://github.com/synthetic-sciences/openscience) 的 **314 个科研子技能**与
 > **7 个 MCP 连接器**，装进 WorkBuddy 等通用 AI Agent 平台。
 > 其中 2 个技能是本包在前述基础上自行扩展的（见 §5.3）。
-> **包本体很轻**（解压约 1.6 MB）：312 个上游子技能不随包分发，用到哪个才从 Gitee 下载哪个，
+> **包本体很轻**（解压约 1.0 MB）：312 个上游子技能不随包分发，用到哪个才从 Gitee 下载哪个，
 > 而且只下那次任务真正需要的文件——见 [§3.7](#ondemand)。
 > 子技能是「能力」，MCP 是「工具」，调度器负责把它们路由到你的问题上去。
 
@@ -11,7 +11,7 @@
 
 <div align="center">
 
-`314` Skills · `16` Categories · `7` MCP Connectors · Apache-2.0 · Python 3.8+ · 零依赖 · 解压约 1.6 MB
+`314` Skills · `16` Categories · `7` MCP Connectors · Apache-2.0 · Python 3.8+ · 零依赖 · 解压约 1.0 MB
 
 </div>
 
@@ -23,21 +23,24 @@
 
 > **科研图表的绘制**是本项目的两个主打之一（另一个是「傻瓜化」）。
 > 下面每一张都是**脚本从数据文件直接生成的成图**——不是示意图、不是贴图，也没有手工美化。
-> 把 CSV 或一组计数交给 Agent，说一句「画个森林图 / 漏斗图 / PRISMA 流程图」，得到的就是这个质量。
+得到的就是这个质量。
+
+> 图片经 Gitee raw 绝对链接加载——投稿包内**不含图片文件**（平台拒收 `.png`）；
+> PNG 原图在本仓库 `docs/figures/`，重建脚本是 `tools/make_demo_figures.py`。
 
 | 森林图 Forest plot | 漏斗图 Funnel plot |
 |---|---|
-| ![森林图：效应量合并、亚组分析与合并菱形](docs/figures/forest-plot.png) | ![漏斗图：发表偏倚与 Egger 检验](docs/figures/funnel-plot.png) |
+| ![森林图：效应量合并、亚组分析与合并菱形](https://gitee.com/georgechou17/open-science-dispatcher/raw/main/docs/figures/forest-plot.png) | ![漏斗图：发表偏倚与 Egger 检验](https://gitee.com/georgechou17/open-science-dispatcher/raw/main/docs/figures/funnel-plot.png) |
 | 效应量合并 · 亚组分析 · 合并菱形 | 发表偏倚 · Egger 检验 · 伪 95% 区间 |
 
 | PRISMA 2020 流程图 | 生存曲线 Kaplan-Meier |
 |---|---|
-| ![PRISMA 2020 文献筛选流程图](docs/figures/prisma-2020-flow.png) | ![Kaplan-Meier 生存曲线：分组曲线、置信区间与风险人数表](docs/figures/kaplan-meier.png) |
+| ![PRISMA 2020 文献筛选流程图](https://gitee.com/georgechou17/open-science-dispatcher/raw/main/docs/figures/prisma-2020-flow.png) | ![Kaplan-Meier 生存曲线：分组曲线、置信区间与风险人数表](https://gitee.com/georgechou17/open-science-dispatcher/raw/main/docs/figures/kaplan-meier.png) |
 | 识别 → 筛选 → 纳入，计数自动校验 | 分组曲线 · 置信区间 · 风险人数表 |
 
 **偏倚风险总结图 Risk-of-bias summary（RoB 2 / ROBINS-I）**
 
-![RoB 2 逐研究逐域偏倚风险红绿灯图](docs/figures/rob2-traffic-light.png)
+![RoB 2 逐研究逐域偏倚风险红绿灯图](https://gitee.com/georgechou17/open-science-dispatcher/raw/main/docs/figures/rob2-traffic-light.png)
 
 逐研究 · 逐域评价 · Cochrane 红黄绿配色。
 
@@ -100,7 +103,7 @@
 **六条铁律**：绝不编造文献、绝不编造数据、先查证再动笔、全程留痕、每步说人话、不确定就问。
 支撑它的子技能包括 `scientific-writing`、`literature-review`（含 PRISMA）、`citation-management`、
 `statistical-analysis`、`pubmed-database`、`matplotlib`、`verify` / `sources` / `peer-review` 等。
-完整定义见 `workflows/sci-paper.md`，或运行 `dispatch.cmd workflow show sci-paper`。
+完整定义见 `workflows/sci-paper.md`，或运行 `python dispatch.py workflow show sci-paper`。
 
 **2. 设计实验与分析数据**
 `statistical-analysis`（检验选择与报告）、`pymc-bayesian-modeling`（贝叶斯建模）、
@@ -140,10 +143,10 @@
 **怎么用**：直接用自然语言提问即可，调度器会检索命中的子技能并载入其正文；需要真的动手时，再按需安装 MCP。
 
 ```bash
-dispatch.cmd workflow show sci-paper     # 读取「从零写 SCI 论文」完整工作流
-dispatch.cmd query "单细胞 降维 聚类"      # 检索能力
-dispatch.cmd load scanpy                 # 载入该子技能的完整方法论
-dispatch.cmd mcp install github          # 生成 MCP 安装方案（默认只看不写）
+python dispatch.py workflow show sci-paper   # 读取「从零写 SCI 论文」完整工作流
+python dispatch.py query "单细胞 降维 聚类"  # 检索能力
+python dispatch.py load scanpy               # 载入该子技能的完整方法论
+python dispatch.py mcp install github        # 生成 MCP 安装方案（默认只看不写）
 ```
 
 <a id="使用"></a>
@@ -193,7 +196,7 @@ macOS：Finder → 顶部菜单「前往」→「前往文件夹」→ 粘贴 `~
 skills
 └── openscience-dispatcher
     ├── SKILL.md          ← 关键文件，必须在这一层
-    ├── dispatch.cmd
+    ├── dispatch.cmd      ← Windows 启动器；仅完整包（平台拒收 .cmd）
     ├── registry.json     ← 314 个子技能的索引（总在包里）
     ├── manifest.json     ← 每个子技能由哪些文件组成、各多大（按需下载的依据）
     ├── skills\           ← 312 个上游子技能；精简版里此目录为空，用哪个下哪个
@@ -747,12 +750,12 @@ Peter Williams（algorithm / algorithmic）、Hal Daumé III、Norman Gray（url
 
 | 文件 | 作用 |
 |---|---|
-| [`LICENSE`](LICENSE) | Apache License 2.0 全文（上游，随附原版权行） |
-| [`NOTICE`](NOTICE) | 上游 NOTICE 要求的署名声明 |
+| [`LICENSE`](LICENSE.md) | Apache License 2.0 全文（上游，随附原版权行） |
+| [`NOTICE`](NOTICE.md) | 上游 NOTICE 要求的署名声明 |
 | [`ATTRIBUTION.md`](ATTRIBUTION.md) | 314 篇子技能的作者与许可分布 |
 | [`THIRD-PARTY-NOTICES.md`](THIRD-PARTY-NOTICES.md) | 内嵌第三方作品清单（MIT / LPPL / 数据条款）与再分发提示 |
 
-**著作权分布**（上游按 `metadata.skill-author` 实测，本地技能按随包 `LICENSE`）：
+**著作权分布**（上游按 `metadata.skill-author` 实测，本地技能按随包 `LICENSE.md`）：
 
 | 著作权人 | 篇数 | 许可 |
 |---|---:|---|
@@ -778,7 +781,7 @@ Peter Williams（algorithm / algorithmic）、Hal Daumé III、Norman Gray（url
 3. 部分数据库（KEGG、HMDB、DrugBank 等）有**独立的数据使用条款**，非学术用途可能需要商业授权。
    许可文件不替代这些条款，请自行确认。
 
-仅调度层（`SKILL.md`、`dispatch.py`、`dispatch.cmd`、`registry.json`、`tools/`、`mcp/INSTALL.md`）
+仅调度层（`SKILL.md`、`dispatch.py`、`registry.json`、`tools/`、`mcp/INSTALL.md`）
 与 `local-skills/` 下的自研技能为本项目原创，同样以 Apache-2.0 分发以保持整体一致
 （`local-skills/unified-research-finder` 例外，按作者的 MIT-0 分发）。
 
@@ -798,7 +801,7 @@ Peter Williams（algorithm / algorithmic）、Hal Daumé III、Norman Gray（url
 结果应为 `<技能目录>/openscience-dispatcher/SKILL.md`。
 
 **环境要求**：Python 3.8+（仅用标准库）· Windows 10+ / macOS / Linux。
-Windows 下用 `dispatch.cmd` 即可，它会自动探测 `py -3` / `python` / `python3`。
+Windows 下用 `python dispatch.py` 即可；完整包另附 `dispatch.cmd`，可自动探测 `py -3` / `python` / `python3`。
 
 **命令一览**
 
@@ -838,7 +841,7 @@ python tools/package.py                          # 打包（输出到 dist/）
 
 | 产物 | 内容 | 规模 | 用途 |
 |---|---|---|---|
-| `openscience-dispatcher-skill.zip` | 扁平根目录、不含 `skills/` | 约 55 文件 / 解压 1.6 MB | 投稿 skillhub / clawhub |
+| `openscience-dispatcher-skill.zip` | 扁平根目录、不含 `skills/` | 约 47 文件 / 解压 1.0 MB | 投稿 skillhub / clawhub |
 | `openscience-dispatcher-full.zip` | 含全部子技能 | 1670 文件 / 解压 21.2 MB | 自用、离线 |
 
 Gitee 主仓库**始终保留 `skills/`**——它正是按需下载的源，删掉就没得下了。
@@ -871,12 +874,12 @@ Real output from the plotting skills — every panel generated by a script strai
 
 > Ports the **314 scientific sub-skills** and **7 MCP connectors** of
 > [OpenScience](https://github.com/synthetic-sciences/openscience) onto generic AI agent platforms.
-> **The package itself is small** (~1.6 MB unpacked): the 312 upstream sub-skills are not
+> **The package itself is small** (~1.0 MB unpacked): the 312 upstream sub-skills are not
 > bundled — the one you need is fetched from Gitee on demand, and only the files that task needs
 > (see [On-demand sub-skills](#ondemand-en)).
 > Sub-skills are *capability*, MCP servers are *tooling*, and the dispatcher routes them to your question.
 
-`314` Skills · `16` Categories · `7` MCP Connectors · Apache-2.0 · Python 3.8+ · Zero dependencies · ~1.6 MB unpacked
+`314` Skills · `16` Categories · `7` MCP Connectors · Apache-2.0 · Python 3.8+ · Zero dependencies · ~1.0 MB unpacked
 
 ### 1. The real bottleneck for undergrads and master's students
 
@@ -909,10 +912,10 @@ writing, keep everything reproducible, explain each step in plain language, ask 
 Full definition in `workflows/sci-paper.md`.
 
 ```bash
-dispatch.cmd workflow show sci-paper               # read the full SCI-paper workflow
-dispatch.cmd query "single cell RNA integration"   # retrieve capability
-dispatch.cmd load scanpy                          # load the full methodology
-dispatch.cmd mcp install github                   # print an install plan (dry run by default)
+python dispatch.py workflow show sci-paper           # read the full SCI-paper workflow
+python dispatch.py query "single cell RNA integration"  # retrieve capability
+python dispatch.py load scanpy                       # load the full methodology
+python dispatch.py mcp install github                # print an install plan (dry run by default)
 ```
 
 ### 3. How to install and use it (no coding required)
@@ -942,7 +945,7 @@ Written for people who don't program. **No coding, no GPU.**
 skills
 └── openscience-dispatcher
     ├── SKILL.md          ← must sit at this level
-    ├── dispatch.cmd
+    ├── dispatch.cmd      ← Windows launcher; full build only (the host rejects .cmd)
     ├── registry.json     ← index of all 314 sub-skills (always present)
     ├── manifest.json     ← what files each sub-skill is made of, and their sizes
     ├── skills\           ← the 312 upstream sub-skills; empty in the slim build
@@ -1077,7 +1080,7 @@ Norman Gray) and venue template maintainers, and to every MCP provider
 
 ### 6. License
 
-Distributed under **Apache-2.0**. See [`LICENSE`](LICENSE), [`NOTICE`](NOTICE),
+Distributed under **Apache-2.0**. See [`LICENSE`](LICENSE.md), [`NOTICE`](NOTICE.md),
 [`ATTRIBUTION.md`](ATTRIBUTION.md) and [`THIRD-PARTY-NOTICES.md`](THIRD-PARTY-NOTICES.md).
 
 - **Apache-2.0 = 299 · MIT = 14 · MIT-0 = 1** (MIT requires retaining its copyright notice;
@@ -1095,7 +1098,7 @@ Only the dispatcher layer is original to this project and is released under the 
 Copy the whole `openscience-dispatcher` folder into your platform's skills directory
 (WorkBuddy: `%USERPROFILE%\.workbuddy\skills\`). The result must be
 `<skills-dir>/openscience-dispatcher/SKILL.md`. Requires Python 3.8+ (standard library only),
-Windows 10+ / macOS / Linux; on Windows `dispatch.cmd` auto-detects `py -3` / `python` / `python3`.
+Windows 10+ / macOS / Linux; on Windows run `python dispatch.py` (the full build also ships `dispatch.cmd`, which auto-detects `py -3` / `python` / `python3`).
 
 | Command | Purpose |
 |---|---|
@@ -1123,7 +1126,7 @@ python tools/package.py                          # build the distribution zips (
 ```
 
 Two distribution shapes are produced. `openscience-dispatcher-skill.zip` is flat at the root and
-omits `skills/` (~55 files / 1.6 MB unpacked) for uploading to skillhub / clawhub. skillhub.cn
+omits `skills/` (~47 files / 1.0 MB unpacked) for uploading to skillhub / clawhub. skillhub.cn
 allows 10 MB per upload with ~200 files suggested; clawhub's only published cap is 50 MB per
 bundle, with no file-count limit. `openscience-dispatcher-full.zip` carries all 1670 files /
 21.2 MB for offline use. The Gitee repository always keeps `skills/` — it is the

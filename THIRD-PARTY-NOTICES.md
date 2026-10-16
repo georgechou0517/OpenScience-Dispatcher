@@ -2,11 +2,11 @@
 
 [English](#english) · [中文摘要](#中文摘要)
 
-This file supplements the upstream [`NOTICE`](NOTICE) and [`LICENSE`](LICENSE). It records
+This file supplements the upstream [`NOTICE`](NOTICE.md) and [`LICENSE`](LICENSE.md). It records
 every third-party work bundled in this repository, its copyright holder, and the license under
 which it is redistributed.
 
-It exists because the upstream `NOTICE` does not enumerate all of them — in particular the
+It exists because the upstream `NOTICE.md` does not enumerate all of them — in particular the
 LaTeX support packages under `skills/writing/ml-paper-writing/templates/` and the sub-skills
 authored by InkVell Inc. and Andrey Fedorov.
 
@@ -51,7 +51,7 @@ The counts above cover the 312 upstream sub-skills under `skills/` only. The 2 s
 added by this package under `local-skills/` are original work (not third-party): see
 [`ATTRIBUTION.md`](ATTRIBUTION.md) for their licenses (Apache-2.0 and MIT-0).
 
-All Apache-2.0 content is covered by the root [`LICENSE`](LICENSE) and [`NOTICE`](NOTICE).
+All Apache-2.0 content is covered by the root [`LICENSE`](LICENSE.md) and [`NOTICE`](NOTICE.md).
 
 ### 3. MIT-licensed sub-skills — copyright notice required
 
