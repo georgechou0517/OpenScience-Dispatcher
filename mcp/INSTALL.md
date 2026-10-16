@@ -137,5 +137,5 @@ CloudTrail 才是权威的外部审计日志。
 （`SPDX-License-Identifier: Apache-2.0`）。`catalog.json` 中 6 个上游连接器转录自 OpenScience
 `backend/cli/src/mcp/catalog.ts`，版权归 Synthetic Sciences / InkVell Inc.；
 第 7 个 `spss` 条目（含选型说明）为本包新增，指向社区项目 `meteor0620/spss-mcp`。
-见仓库根目录的 [`LICENSE`](../LICENSE)、[`NOTICE`](../NOTICE)、
+见仓库根目录的 [`LICENSE`](../LICENSE.md)、[`NOTICE`](../NOTICE.md)、
 [`ATTRIBUTION.md`](../ATTRIBUTION.md) 与 [`THIRD-PARTY-NOTICES.md`](../THIRD-PARTY-NOTICES.md)。

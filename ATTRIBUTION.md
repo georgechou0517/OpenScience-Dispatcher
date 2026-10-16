@@ -40,7 +40,7 @@ The bundled sub-skills are **not the work of a single author**. Copyright holder
 | Andrey Fedorov | 1 | MIT |
 | **Total** | **312** | |
 
-Apache-2.0 content is covered by [`LICENSE`](LICENSE) and [`NOTICE`](NOTICE). The MIT portion,
+Apache-2.0 content is covered by [`LICENSE`](LICENSE.md) and [`NOTICE`](NOTICE.md). The MIT portion,
 plus the third-party LaTeX packages bundled with the paper templates, are itemised in
 [`THIRD-PARTY-NOTICES.md`](THIRD-PARTY-NOTICES.md).
 
@@ -55,7 +55,7 @@ Every dispatcher-layer source file carries an `SPDX-License-Identifier: Apache-2
 
 Two bundled sub-skills under `local-skills/` are also original to this project:
 `visualization/meta-analysis-figures` (Apache-2.0) and `research/unified-research-finder`
-(an MIT-0 copy of the author's own standalone project — see its `LICENSE`).
+(an MIT-0 copy of the author's own standalone project — see its `LICENSE.md`).
 
 ### A note on the `license:` frontmatter field
 
@@ -103,7 +103,7 @@ Do not read these values as license declarations for this repository. See
 | Andrey Fedorov | 1 | MIT |
 | **合计** | **312** | |
 
-Apache-2.0 部分见 [`LICENSE`](LICENSE) 与 [`NOTICE`](NOTICE)；MIT 部分及随论文模板打包的
+Apache-2.0 部分见 [`LICENSE`](LICENSE.md) 与 [`NOTICE`](NOTICE.md)；MIT 部分及随论文模板打包的
 第三方 LaTeX 宏包，逐项列于 [`THIRD-PARTY-NOTICES.md`](THIRD-PARTY-NOTICES.md)。
 
 ### 本项目原创部分
@@ -117,7 +117,7 @@ Apache-2.0 分发。调度层每个源文件均带 `SPDX-License-Identifier: Apa
 
 `local-skills/` 下的 2 篇子技能同样为本项目原创：`visualization/meta-analysis-figures`
 （Apache-2.0）与 `research/unified-research-finder`（作者本人独立项目的 MIT-0 副本，
-许可见其自带 `LICENSE`）。
+许可见其自带 `LICENSE.md`）。
 
 ### 关于 frontmatter 里的 `license:` 字段
 

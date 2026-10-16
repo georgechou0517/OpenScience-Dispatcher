@@ -1,5 +1,31 @@
 # Changelog
 
+## 1.4.2
+
+**修掉一个被 git 藏住的换行符缺陷，并补上 skillhub 发布元数据。**
+
+- **`rebuild.py` 不再写 CRLF。** `Path.write_text` 在 Windows 上默认用 `os.linesep`，
+  使 `registry.json` / `manifest.json` 落盘成 CRLF，而仓库按 `.gitattributes`
+  （`* text=auto eol=lf`）存 LF——`git status` 会因归一化比对而**显示干净**，
+  污染被彻底隐藏（远端 manifest 71,281 bytes vs 本地 71,613 bytes，差的 332 正是行数）。
+  凡是不走对象库、直接读工作区的链路（`package.py` 组包在内）拿到的都是 CRLF 变体。
+  两处写入现均显式 `newline="\n"`；`mcp/catalog.json`、`mcp/INSTALL.md`、`ATTRIBUTION.md`
+  一并归一为 LF。**提交的 blob 本就是 LF，此次不含任何内容变更。**
+- **新增 `tools/verify_manifest.py`**：把 manifest 同时与**工作区**和
+  `git ls-tree -r -l HEAD` 的 blob 字节数比对，任何不符即退出码 1——
+  这类「清单说一个数、仓库 serves 另一个数」的缺陷，此前只在下载失败时才暴露。
+- **补 skillhub 发布元数据**：`slug` / `displayName` / `summary` / `homepage` / `tags`，
+  精简包（47 文件 / 解压 0.99 MB，不含 `skills/`）由此可经 `skillhub publish` 上传。
+- **`LICENSE` / `NOTICE` 改名为 `LICENSE.md` / `NOTICE.md`**（自研技能自带的 `LICENSE` 一并改）：
+  平台的发布接口拒收**无扩展名文件**（实测 HTTP 400「不允许的文件类型: LICENSE」），而 Apache-2.0
+  要求再分发时随附许可证全文——改名既保住全文，也让包内所有许可链接不断。仓库内引用已同步更新。
+- **`dispatch.cmd` 退出投稿包**：平台同样拒收 `.cmd`。它只是自动探测 `py -3` / `python` / `python3`
+  的 Windows 启动器，等价入口 `python dispatch.py` 已写进各处命令示例；仓库与全量包仍保留它。
+  精简包另排除 `.gitattributes` / `.gitignore`——平台按名拒收的 VCS 文件。
+- **`docs/figures/` 效果图退出投稿包**：平台同样拒收 `.png`（HTTP 400「不允许的文件类型:
+  docs/figures/forest-plot.png」）。README 画廊改为指向 Gitee raw 的绝对链接，Gitee / GitHub
+  照常显示；仓库仍保留 PNG 原图与 `tools/make_demo_figures.py` 重建脚本。
+
 ## 1.4.1
 
 **移除被合规拦下的那一个文件，并修掉一个会让按需下载全线失败的换行符缺陷。**

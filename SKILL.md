@@ -1,9 +1,14 @@
 ---
 name: openscience-dispatcher
-version: 1.4.1
-description: 综合科研调度器（OpenScience Dispatcher）——把 312 个上游 OpenScience 子技能（16 类：ml-training / biology / databases / llm-tools / chemistry / physics / coding / research / cloud-compute / data-engineering / writing / ml-inference / visualization / quantum / other / document-parsing）加 2 个本包自研子技能（学术搜索 unified-research-finder、Meta 分析图件 meta-analysis-figures），共 314 个，与 7 个按需安装的 MCP 工具，在通用 AI Agent 平台上编排成类 OpenScience 的科研工作流。**本体很轻**：解压约 1.6 MB / 55 个文件，312 个上游子技能不随包分发，用户需要哪个才从 Gitee 按需下载哪个（`dispatch.py plan` 离线预估体积、`fetch` 执行，**下载前必先征得用户同意**）。**内置端到端 SCI 论文工作流**：面向零科研基础的本科生，从一句话题目经信息采集、可行性查证、检索、PRISMA 筛选、数据提取、统计、图表、英文稿、反造假审计到投稿准备，全程由本调度器串联子技能完成。触发场景：从零写一篇 SCI 论文、系统综述 / Meta 分析、森林图 / 漏斗图 / PRISMA 流程图 / 偏倚风险图、文献检索与循证写作（PubMed / Google 学术 / 学术镜像 / 影响因子）、单细胞与组学分析、结构生物学与药物设计、化学信息学、科学数据库查询（UniProt / PDB / ChEMBL / PubMed 等）、模型训练与微调、GPU 云算力调度、量子计算、科学可视化、同行评审；或用户直接提到 OpenScience、子技能、科研调度、scientific workflows。
+slug: openscience-dispatcher
+displayName: OpenScience 科研调度器
+summary: 把 312 个上游科研子技能与 7 个 MCP 工具编排成端到端科研工作流；本体仅约 1.0 MB，子技能按需从 Gitee 下载。
+version: 1.4.2
+description: 综合科研调度器（OpenScience Dispatcher）——把 312 个上游 OpenScience 子技能（16 类：ml-training / biology / databases / llm-tools / chemistry / physics / coding / research / cloud-compute / data-engineering / writing / ml-inference / visualization / quantum / other / document-parsing）加 2 个本包自研子技能（学术搜索 unified-research-finder、Meta 分析图件 meta-analysis-figures），共 314 个，与 7 个按需安装的 MCP 工具，在通用 AI Agent 平台上编排成类 OpenScience 的科研工作流。**本体很轻**：解压约 1.0 MB / 47 个文件，312 个上游子技能不随包分发，用户需要哪个才从 Gitee 按需下载哪个（`dispatch.py plan` 离线预估体积、`fetch` 执行，**下载前必先征得用户同意**）。**内置端到端 SCI 论文工作流**：面向零科研基础的本科生，从一句话题目经信息采集、可行性查证、检索、PRISMA 筛选、数据提取、统计、图表、英文稿、反造假审计到投稿准备，全程由本调度器串联子技能完成。触发场景：从零写一篇 SCI 论文、系统综述 / Meta 分析、森林图 / 漏斗图 / PRISMA 流程图 / 偏倚风险图、文献检索与循证写作（PubMed / Google 学术 / 学术镜像 / 影响因子）、单细胞与组学分析、结构生物学与药物设计、化学信息学、科学数据库查询（UniProt / PDB / ChEMBL / PubMed 等）、模型训练与微调、GPU 云算力调度、量子计算、科学可视化、同行评审；或用户直接提到 OpenScience、子技能、科研调度、scientific workflows。
 agent_created: true
 license: Apache-2.0
+homepage: https://gitee.com/georgechou17/open-science-dispatcher
+tags: [科研, Meta分析, 文献检索, 学术写作, 数据可视化, 机器学习]
 triggers:
   - OpenScience
   - 科研调度
@@ -42,7 +47,7 @@ triggers:
 所有命令都在 `$OSD` 内执行；**不要**把 `$OSD/skills/**/SKILL.md` 当作顶层技能去调用——它们只能经调度器访问。
 
 > ⚠️ **312 个上游子技能不随包分发。** 本包为投稿 skillhub / clawhub 做过瘦身：包内只有**索引**
-> （`registry.json`）与**文件清单**（`manifest.json`），没有子技能正文——整包解压 1.6 MB，而带全部
+> （`registry.json`）与**文件清单**（`manifest.json`），没有子技能正文——整包解压 1.0 MB，而带全部
 > 子技能要 21 MB，远超投稿平台的上传上限。用户真正要用到某个子技能时：
 > `dispatch.py plan <名称>` 预估体积 → **问用户要不要下载** → 同意后 `dispatch.py fetch <名称> --yes`，
 > 只拉这一次任务需要的文件（单个子技能通常几万字节）。
@@ -110,7 +115,7 @@ triggers:
 
 | 平台 | 命令 |
 |---|---|
-| Windows | `dispatch.cmd <子命令>`（自动探测 Python，无需配路径） |
+| Windows | `python dispatch.py <子命令>`（完整包另附 `dispatch.cmd`，可自动探测 `py -3` / `python` / `python3`） |
 | 通用 | `python "dispatch.py" <子命令>` |
 | macOS / Linux | `python3 "dispatch.py" <子命令>` |
 
@@ -303,7 +308,7 @@ export OSD_MCP_CONFIG="$HOME/my-agent/mcp.json"     # bash
 - **不猜凭据、不存凭据**。Benchling 的租户地址需用户提供；OAuth 走浏览器回环，本包不接触 token 明文。
 - **不预授权**。每次 MCP 工具调用都过一次权限边界；不要为了省事批量批准。
 - **计费资源需显式确认**。GPU 类连接器在批准前先确认计费上限。
-- `skills/` 子技能目录只读（重建会覆盖），要修上游内容走 `tools/patches/`；`local-skills/` 可直接编辑。整体以 Apache-2.0 分发，见 `LICENSE`、`NOTICE`、`ATTRIBUTION.md` 与 `THIRD-PARTY-NOTICES.md`。
+- `skills/` 子技能目录只读（重建会覆盖），要修上游内容走 `tools/patches/`；`local-skills/` 可直接编辑。整体以 Apache-2.0 分发，见 `LICENSE.md`、`NOTICE.md`、`ATTRIBUTION.md` 与 `THIRD-PARTY-NOTICES.md`。
 - **注意**：子技能 frontmatter 里的 `license:` 字段描述的是**它所讲授的第三方库**的许可（如 `etetoolkit → GPL-3.0` 指 ETE 工具包），**不是**该技能或本仓库的许可声明；本包未内嵌任何 GPL/LGPL/CeCILL 源码。
 
 ---
@@ -314,7 +319,7 @@ export OSD_MCP_CONFIG="$HOME/my-agent/mcp.json"     # bash
 openscience-dispatcher/
 ├── SKILL.md            ← 本文件（调度协议）
 ├── dispatch.py         ← 检索引擎（list / category / query / load / status / plan / fetch / mcp / net / workflow）
-├── dispatch.cmd        ← Windows 启动器（自动探测 Python）
+├── dispatch.cmd        ← Windows 启动器（自动探测 Python；仅完整包——平台拒收 .cmd，投稿包不含）
 ├── registry.json       ← 314 条子技能索引（名称/分类/描述/功能/标签/路径/origin）
 ├── manifest.json       ← 312 个上游子技能的文件清单 + 字节数 + Gitee 源（按需下载的依据）
 ├── workflows/          ← 端到端工作流定义（文件名即 id，无需登记）
@@ -336,13 +341,13 @@ openscience-dispatcher/
 │   ├── make_demo_figures.py ← 重建 README 效果图到 docs/figures/
 │   ├── package.py      ← 打包：投稿精简包（无 skills/，扁平根）与自用全量包
 │   └── sources.py      ← 源仓库映射（上游 / 自研 / MCP）
-├── docs/figures/       ← README 顶部效果图（森林图 / 漏斗图 / PRISMA / RoB 2 / KM）
+├── docs/figures/       ← README 顶部效果图（森林图 / 漏斗图 / PRISMA / RoB 2 / KM；仅完整包——平台拒收图片，投稿包改用 Gitee 链接）
 ├── README.md
 ├── CHANGELOG.md
 ├── ATTRIBUTION.md           ← 署名与著作权人分布
 ├── THIRD-PARTY-NOTICES.md   ← 第三方作品清单（MIT / LPPL 等）
-├── NOTICE
-└── LICENSE                  ← Apache-2.0（上游）
+├── NOTICE.md
+└── LICENSE.md               ← Apache-2.0（上游）
 ```
 
 子技能保持上游 `<分类>/<技能>/` 的原始分层，因此可以直接与上游做目录级 diff 或整目录替换。
@@ -354,7 +359,7 @@ openscience-dispatcher/
 
 | 产物 | 内容 | 规模 | 用途 |
 |---|---|---|---|
-| `openscience-dispatcher-skill.zip` | 扁平根目录、**不含 `skills/`** | 55 文件 / 解压 1.6 MB | 投稿 skillhub / clawhub |
+| `openscience-dispatcher-skill.zip` | 扁平根目录、**不含 `skills/`** | 47 文件 / 解压 1.0 MB | 投稿 skillhub / clawhub |
 | `openscience-dispatcher-full.zip` | 含全部子技能，外加一层 `openscience-dispatcher/` | 1670 文件 / 解压 21.2 MB | 自用、离线 |
 
 Gitee 主仓库**始终保留 `skills/`**——它正是按需下载的源，删掉就没得下了。
@@ -365,7 +370,7 @@ Gitee 主仓库**始终保留 `skills/`**——它正是按需下载的源，删
 
 | 情况 | 处理 |
 |---|---|
-| 提示找不到 Python | Windows 装 Python 3.8+ 并勾选 "Add python.exe to PATH"，或直接用 `dispatch.cmd` |
+| 提示找不到 Python | Windows 装 Python 3.8+ 并勾选 "Add python.exe to PATH"，或改用 `py -3` / 绝对路径解释器；完整包的 `dispatch.cmd` 可自动探测 |
 | 控制台中文乱码 | `dispatch.py` 已强制 UTF-8 输出；若仍乱码，在 cmd 先执行 `chcp 65001` |
 | `query` 无命中 | 先 `category` 浏览；改用上游英文命名；再不行就承认超出子技能覆盖，用通用能力完成，不要硬套 |
 | `load` 名称歧义 | 用返回的候选列表选精确名重试 |

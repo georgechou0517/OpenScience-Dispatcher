@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # SPDX-License-Identifier: Apache-2.0
-# Part of OpenScience Dispatcher (dispatcher layer). Upstream content and full notices:/n# see LICENSE, NOTICE, ATTRIBUTION.md, THIRD-PARTY-NOTICES.md.
+# Part of OpenScience Dispatcher (dispatcher layer). Upstream content and full notices:/n# see LICENSE.md, NOTICE.md, ATTRIBUTION.md, THIRD-PARTY-NOTICES.md.
 """OpenScience Dispatcher — 每个 Skill / MCP 的上游项目与源仓库映射。
 
 值格式: (项目名, 源仓库/主页 URL)
