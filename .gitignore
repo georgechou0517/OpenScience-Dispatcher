@@ -5,6 +5,12 @@ __pycache__/
 .venv/
 venv/
 
+# Distribution zips built by tools/package.py
+dist/
+
+# Partially written downloads left behind by dispatch.py fetch
+*.part
+
 # MCP config backups written by dispatch.py --write
 *.bak-*
 

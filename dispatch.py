@@ -151,6 +151,8 @@ def workflows():
 
     Metadata is read from the file itself, so adding a workflow needs no registry
     update: the H1 line supplies the title, the first blockquote supplies the summary.
+    An optional `requires:` list in the frontmatter names the sub-skills the workflow
+    needs, which is what lets `fetch --workflow X` download exactly that set.
     """
     rows = []
     if not WORKFLOWS.is_dir():
@@ -158,9 +160,13 @@ def workflows():
     for f in sorted(WORKFLOWS.glob("*.md")):
         title, summary = "", ""
         try:
-            lines = f.read_text(encoding="utf-8").splitlines()
+            raw = f.read_text(encoding="utf-8")
         except OSError:
-            lines = []
+            raw = ""
+        requires = frontmatter_list(raw, "requires")
+        # Scan the body only. A frontmatter line such as `# 本工作流用到的子技能。`
+        # would otherwise be read as the H1 and become the listed title.
+        lines = re.sub(r"^---\s*\n.*?\n---\s*\n", "", raw, count=1, flags=re.DOTALL).splitlines()
         for ln in lines:
             s = ln.strip()
             if not title and s.startswith("# ") and not s.startswith("## "):
@@ -170,7 +176,8 @@ def workflows():
                 summary = s.lstrip("> ").strip()
             if title and summary:
                 break
-        rows.append({"id": f.stem, "title": title or f.stem, "summary": summary, "path": f})
+        rows.append({"id": f.stem, "title": title or f.stem, "summary": summary,
+                     "path": f, "requires": requires})
     return rows
 
 
@@ -316,6 +323,13 @@ def brief(e, i=None):
     if e.get("functionality"):
         out.append(f"    功能: {e['functionality'][:220]}")
     out.append(f"    路径: {e['path']}")
+    # A skill that is not on disk says so, and says how big it is. The agent's job is
+    # then to ask the user before anything is fetched, not to guess at its contents.
+    if e.get("origin") != "local":
+        miss, size = missing_files(e)
+        if miss:
+            out.append(f"    ⬇ 未下载（{len(miss)} 文件 / {human(size)}）"
+                       f" — 需先 dispatch.py fetch {e['name']}")
     return "\n".join(out)
 
 
@@ -466,6 +480,394 @@ def write_mcp(server_name, cfg, path):
     return path
 
 
+# --------------------------------------------------------------- on demand
+# The submission build ships without `skills/`: 1616 files / ~20 MB is over skillhub's
+# 200-file and 10 MB upload caps, and clawhub is a forum upload with the same shape of
+# limit. What ships instead is `manifest.json` — the file list and byte size of every
+# bundled sub-skill, plus where to fetch it. `plan` answers "how big is this, and do I
+# already have it" entirely offline; `fetch` is the only command that writes to disk,
+# and it writes nothing at all until it is asked with --yes.
+MANIFEST = ROOT / "manifest.json"
+DEFAULT_SOURCE_HOME = "https://gitee.com/georgechou17/open-science-dispatcher"
+DEFAULT_SOURCE_REF = "main"
+UA = "openscience-dispatcher/1.4"
+FETCH_JOBS = 6
+FETCH_TIMEOUT = 30
+EXIT_NEEDS_FETCH = 4
+EXIT_SOURCE_BLOCKED = 5
+# Statuses that mean the source itself refuses to serve the path. Retrying is
+# pointless, and fetching it another way would be circumventing the block.
+BLOCKED_HTTP = (401, 403, 451)
+
+_MANIFEST = None
+
+
+def manifest(force=False):
+    """File inventory of the bundled sub-skills, written by tools/rebuild.py.
+
+    Returns {} when missing (an older copy of the package, or a maintainer who has not
+    run a rebuild yet), so callers degrade to "size unknown" instead of raising. Cached,
+    because `brief()` consults it once per record while listing.
+    """
+    global _MANIFEST
+    if _MANIFEST is None or force:
+        try:
+            _MANIFEST = json.loads(MANIFEST.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            _MANIFEST = {}
+    return _MANIFEST
+
+
+def source():
+    """(repo home, ref). Point at a fork or mirror with OSD_SOURCE_HOME / OSD_SOURCE_REF."""
+    src = manifest().get("source") or {}
+    home = (os.environ.get("OSD_SOURCE_HOME") or "").strip() or src.get("home") or DEFAULT_SOURCE_HOME
+    ref = (os.environ.get("OSD_SOURCE_REF") or "").strip() or src.get("ref") or DEFAULT_SOURCE_REF
+    return home.rstrip("/"), ref
+
+
+def human(n):
+    n = int(n or 0)
+    for unit, div in (("MB", 1 << 20), ("KB", 1 << 10)):
+        if n >= div:
+            return f"{n / div:.1f} {unit}"
+    return f"{n} B"
+
+
+def safe_rel(rel):
+    """Reject any manifest path that would escape the skill's own directory."""
+    p = Path(str(rel).replace("\\", "/"))
+    if p.is_absolute() or ".." in p.parts or not p.parts:
+        raise ValueError(f"manifest 中的路径不安全: {rel!r}")
+    return p
+
+
+def remote_files(e, mf=None):
+    mf = manifest() if mf is None else mf
+    return (mf.get("skills") or {}).get(e["path"]) or []
+
+
+def missing_files(e, mf=None):
+    """(relative paths absent or of the wrong size, their combined size).
+
+    Size rather than a hash: the manifest already has to carry per-file sizes to answer
+    "how big is this download", so it doubles as an integrity check for free.
+    """
+    base = ROOT / e["path"]
+    miss, size = [], 0
+    for rel, n in remote_files(e, mf):
+        try:
+            p = base / safe_rel(rel)
+        except ValueError:
+            continue
+        try:
+            if p.is_file() and p.stat().st_size == n:
+                continue
+        except OSError:
+            pass
+        miss.append(rel)
+        size += int(n)
+    return miss, size
+
+
+def count_files(base):
+    n = total = 0
+    if base.is_dir():
+        for p in base.rglob("*"):
+            if p.is_file():
+                n += 1
+                try:
+                    total += p.stat().st_size
+                except OSError:
+                    pass
+    return n, total
+
+
+def download(home, ref, jobs, work):
+    """Fetch work = [(local Path, remote relative path, expected size)] concurrently.
+
+    Returns (written, failed, blocked). The last two are kept apart on purpose: a
+    timeout is something the user can fix by retrying, while a 451 from the host is a
+    compliance decision about the content itself. Reporting them as one number would
+    turn "the host will never serve this" into "your network is flaky".
+
+    A short read is a failure, not a partial success: writing a truncated SKILL.md is
+    worse than writing nothing, because a human reads it as a real skill while the next
+    run would silently accept the wrong size.
+    """
+    import concurrent.futures as futures
+    from urllib.error import HTTPError
+
+    written, failed, blocked = [], [], []
+
+    def one(item):
+        dest, rel, want = item
+        url = f"{home}/raw/{ref}/{rel}"
+        last = None
+        for attempt in range(3):
+            try:
+                req = urllib.request.Request(url, headers={"User-Agent": UA})
+                with urllib.request.urlopen(req, timeout=FETCH_TIMEOUT) as r:
+                    data = r.read()
+                if want and len(data) != want:
+                    raise OSError(f"大小不符: 期望 {want} 字节，实收 {len(data)}")
+                dest.parent.mkdir(parents=True, exist_ok=True)
+                tmp = dest.with_name(dest.name + ".part")
+                tmp.write_bytes(data)
+                tmp.replace(dest)
+                return dest, None, None
+            except HTTPError as exc:
+                if exc.code in BLOCKED_HTTP:
+                    return dest, "blocked", f"HTTP {exc.code} — 源站拒绝提供该路径"
+                last = exc
+            except Exception as exc:  # timeout, DNS, truncated body
+                last = exc
+            if attempt < 2:
+                time.sleep(0.6 * (attempt + 1))
+        return dest, "failed", f"{type(last).__name__}: {last}"
+
+    total = len(work)
+    with futures.ThreadPoolExecutor(max_workers=max(1, jobs)) as pool:
+        for i, (dest, kind, msg) in enumerate(pool.map(one, work), 1):
+            if kind == "blocked":
+                blocked.append((dest, msg))
+            elif kind:
+                failed.append((dest, msg))
+            else:
+                written.append(dest)
+            if i % 25 == 0 or i == total:
+                print(f"    … {i}/{total}", flush=True)
+    return written, failed, blocked
+
+
+def frontmatter_list(text, key):
+    """Collect `key:` -> [items] from a leading YAML frontmatter block."""
+    m = re.match(r"^---\s*\n(.*?)\n---\s*\n", text, re.DOTALL)
+    if not m:
+        return []
+    out, grab = [], False
+    for line in m.group(1).split("\n"):
+        s = line.strip()
+        if not s or s.startswith("#"):
+            continue
+        if not line[:1].isspace():
+            grab = s.split(":", 1)[0].strip() == key
+            continue
+        if grab and s.startswith("- "):
+            out.append(s[2:].split(" #")[0].strip().strip('"').strip("'"))
+    return out
+
+
+def select(rows, names=(), workflow=None, query=None, top=3, everything=False):
+    """Resolve the records a command should act on. Returns (records, notes)."""
+    if everything:
+        return [e for e in rows if remote_files(e)], []
+    seeds, notes = [], []
+    if workflow:
+        hit = next((w for w in workflows() if w["id"].lower() == workflow.lower()), None)
+        if not hit:
+            return [], [f"未找到工作流: {workflow}"]
+        seeds = list(hit.get("requires") or [])
+        if not seeds:
+            return [], [f"工作流 {workflow} 未声明 requires（在文件开头的 frontmatter 里加 requires:）"]
+    if query:
+        q, extra, cn = expand(query)
+        ranked = sorted(((score(e, q, extra, cn), e) for e in rows), key=lambda t: -t[0])
+        seeds += [e["name"] for s, e in ranked[:top] if s > 0]
+        if not seeds:
+            notes.append(f"检索「{query}」没有命中任何子技能")
+
+    by_name = {e["name"].lower(): e for e in rows}
+    picked, seen = [], set()
+    for s in list(names) + seeds:
+        key = (s or "").strip().lower()
+        if not key:
+            continue
+        e = by_name.get(key)
+        if e is None:
+            hits = [x for x in rows if x["name"].lower().startswith(key)]
+            e = hits[0] if len(hits) == 1 else None
+        if e is None:
+            notes.append(f"未找到子技能: {s}")
+            continue
+        if e["name"] in seen:
+            continue
+        seen.add(e["name"])
+        if e.get("origin") == "local":
+            notes.append(f"{e['name']} 随包分发，无需下载")
+            continue
+        if not remote_files(e):
+            notes.append(f"{e['name']} 不在清单里（manifest.json 可能过期，先跑 tools/rebuild.py）")
+            continue
+        picked.append(e)
+    return picked, notes
+
+
+def targets_of(a):
+    picked, notes = select(
+        registry(),
+        names=getattr(a, "names", None) or [],
+        workflow=getattr(a, "workflow", None),
+        query=getattr(a, "query", None),
+        top=getattr(a, "top", 3),
+        everything=getattr(a, "everything", False),
+    )
+    for n in notes:
+        print(f"  · {n}")
+    return picked
+
+
+def cmd_status(a):
+    rows = registry()
+    mf = manifest()
+    home, ref = source()
+    local = [e for e in rows if e.get("origin") == "local"]
+    up = [e for e in rows if e.get("origin") != "local"]
+
+    lf = lb = 0
+    for e in local:
+        n, b = count_files(ROOT / e["path"])
+        lf += n
+        lb += b
+
+    full = part = none = havef = 0
+    for e in up:
+        miss, _size = missing_files(e, mf)
+        tot = len(remote_files(e, mf))
+        if not tot:
+            continue
+        havef += tot - len(miss)
+        if not miss:
+            full += 1
+        elif len(miss) == tot:
+            none += 1
+        else:
+            part += 1
+
+    t = mf.get("totals") or {}
+    print("随包分发（local-skills/，解压即可用，不需要联网）")
+    print(f"  {len(local):>3} 个技能 / {lf} 文件 / {human(lb)}")
+    print()
+    print("上游子技能（按需下载）")
+    print(f"  {t.get('skills', len(up)):>3} 个技能 / {t.get('files', '?')} 文件 / {human(t.get('bytes'))}")
+    print(f"  已完整    : {full}")
+    print(f"  部分缺失  : {part}")
+    print(f"  完全未下载: {none}")
+    print(f"  本地已有  : {havef} 文件")
+    print()
+    print(f"源  : gitee  {home}/raw/{ref}")
+    if mf:
+        print(f"清单: manifest.json（{mf.get('generated', '?')} 生成，"
+              f"{len(mf.get('skills') or {})} 条）")
+    else:
+        print("清单: manifest.json 缺失 — 按需下载不可用，先跑 tools/rebuild.py")
+    if up:
+        print("\n下一步: dispatch.py plan <名称...> 预估体积；经用户确认后 fetch <名称...> --yes 下载。")
+
+
+def cmd_plan(a):
+    picked = targets_of(a)
+    if not picked:
+        print("没有需要按需下载的子技能。")
+        return
+    mf = manifest()
+    home, ref = source()
+    width = max(len(e["name"]) for e in picked)
+    print(f"\n下载计划（源: {home}/raw/{ref}，逐文件直连，不需要 git / 令牌）\n")
+    tf = tb = ready = 0
+    for e in picked:
+        miss, size = missing_files(e, mf)
+        tot = len(remote_files(e, mf))
+        ready += tot - len(miss)
+        tf += len(miss)
+        tb += size
+        if not miss:
+            state = "已完整"
+        elif len(miss) == tot:
+            state = f"未下载 {tot}"
+        else:
+            state = f"缺 {len(miss)}/{tot}"
+        print(f"  {e['name']:<{width}}  [{e['category']:<16}] {state:<12} {human(size)}")
+    print(f"\n合计: {len(picked)} 个技能 / 需下载 {tf} 个文件 / {human(tb)}"
+          f"（本地已有 {ready} 个文件）")
+    if tf:
+        if len(picked) <= 6:
+            hint = " ".join(e["name"] for e in picked)
+        else:
+            hint = (f"--workflow {a.workflow}" if getattr(a, "workflow", None)
+                    else ("--all" if getattr(a, "everything", False) else "<上面列出的名称>"))
+        print(f"\n确认后运行（不加 --yes 只会重复这份计划）：\n  dispatch.py fetch {hint} --yes")
+
+
+def cmd_fetch(a):
+    picked = targets_of(a)
+    if not picked:
+        print("没有需要按需下载的子技能。")
+        return
+    mf = manifest()
+    home, ref = source()
+    jobs = max(1, min(16, a.jobs))
+
+    plan, work = [], []
+    for e in picked:
+        rows = remote_files(e, mf)
+        if a.force:
+            miss = [r for r, _ in rows]
+            size = sum(int(n) for _, n in rows)
+        else:
+            miss, size = missing_files(e, mf)
+        plan.append((e, miss, size))
+        sizes = {r: n for r, n in rows}
+        for rel in miss:
+            work.append((ROOT / e["path"] / safe_rel(rel), f"{e['path']}/{rel}", int(sizes[rel])))
+
+    tf = sum(len(m) for _, m, _ in plan)
+    tb = sum(s for _, _, s in plan)
+    print(f"\n源: {home}/raw/{ref}")
+    print(f"待下载: {len(picked)} 个技能 / {tf} 个文件 / {human(tb)}（并发 {jobs}）")
+    for e, miss, size in plan:
+        state = "已完整，跳过" if not miss else f"{len(miss)} 文件 / {human(size)}"
+        print(f"  {e['name']:<28} [{e['category']:<16}] {state}")
+
+    if not tf:
+        print("\n全部已就绪，无需下载。")
+        return
+    if not a.yes:
+        print("\n⏸ 以上是计划，未下载任何文件。")
+        print("   请先向用户说明体积并征得同意，再加 --yes 重跑：")
+        print(f"    dispatch.py fetch {' '.join(e['name'] for e in picked[:3])}"
+              f"{' …' if len(picked) > 3 else ''} --yes")
+        return
+
+    print()
+    written, failed, blocked = download(home, ref, jobs, work)
+    print(f"\n完成: {len(written)} 个文件写入，{len(failed)} 个失败，"
+          f"{len(blocked)} 个被源站拦截")
+
+    if blocked:
+        print("\n⛔ 被源站拦截（不是网络问题，是平台对该内容做了合规过滤）：")
+        for p, msg in blocked[:10]:
+            print(f"  {p}\n      {msg}")
+        if len(blocked) > 10:
+            print(f"  … 另有 {len(blocked) - 10} 个")
+        print("  这些文件取不回来，本工具**不会**用其它途径绕过平台的合规判断。")
+        print("  受影响的子技能仍然可用，只是少了这几个资源文件；"
+              "要彻底消除，需要把该资源从仓库里移除或替换。")
+
+    if failed:
+        for p, err in failed[:10]:
+            print(f"  ✗ {p}\n      {err}")
+        if len(failed) > 10:
+            print(f"  … 另有 {len(failed) - 10} 个失败")
+        print("\n失败的子技能仍不可用。排查网络后重跑同一条命令即可——"
+              "已写入的文件会按大小自动跳过。")
+        sys.exit(1)
+    if blocked:
+        sys.exit(EXIT_SOURCE_BLOCKED)
+    print("现在可以 dispatch.py load <名称> 了。")
+
+
+
 # ---------------------------------------------------------------------- commands
 def cmd_list(a):
     rows = registry()
@@ -530,6 +932,20 @@ def cmd_load(a):
         sys.exit(1)
 
     base = ROOT / e["path"]
+    if not (base / "SKILL.md").is_file():
+        miss, size = missing_files(e)
+        print(f"「{e['name']}」尚未下载到本地，无法载入。")
+        if miss:
+            home, ref = source()
+            print(f"  需要 {len(miss)} 个文件 / {human(size)}")
+            print(f"  源: {home}/raw/{ref}")
+        else:
+            print("  manifest.json 里没有它的文件清单——先跑 tools/rebuild.py 重建。")
+        print("\n按需下载协议（本包默认不内置这 312 个上游子技能）：")
+        print(f"  1. 预览体积（不联网、不写盘）: dispatch.py plan {e['name']}")
+        print("  2. 向用户说明体积并征得同意")
+        print(f"  3. 确认后执行: dispatch.py fetch {e['name']} --yes")
+        sys.exit(EXIT_NEEDS_FETCH)
     text = (base / "SKILL.md").read_text(encoding="utf-8", errors="replace")
     m = re.match(r"^---\s*\n.*?\n---\s*\n?(.*)$", text, re.DOTALL)
     body = m.group(1) if m else text
@@ -653,7 +1069,10 @@ def cmd_workflow(a):
             if rows:
                 print("可用: " + ", ".join(r["id"] for r in rows))
             return
-        print(hit["path"].read_text(encoding="utf-8"), end="")
+        raw = hit["path"].read_text(encoding="utf-8")
+        if hit.get("requires"):
+            print(f"> 依赖子技能（首次使用需按需下载）: {', '.join(hit['requires'])}\n")
+        print(re.sub(r"^---\s*\n.*?\n---\s*\n", "", raw, count=1, flags=re.DOTALL), end="")
         return
 
     if not rows:
@@ -709,6 +1128,28 @@ def main():
     s.add_argument("action", nargs="?", default="list", choices=["list", "show"])
     s.add_argument("id", nargs="?", help="工作流 id，配合 show 使用")
     s.set_defaults(fn=cmd_workflow)
+
+    s = sub.add_parser("status", help="查看随包 / 已下载 / 未下载的规模")
+    s.set_defaults(fn=cmd_status)
+
+    s = sub.add_parser("plan", help="离线预估需下载的文件数与体积（不联网、不写盘）")
+    s.add_argument("names", nargs="*", help="子技能名（留空则配合 --workflow / --query / --all）")
+    s.add_argument("--workflow", help="按工作流 frontmatter 里的 requires 预估")
+    s.add_argument("--query", help="按检索词取相关度最高的前 N 个")
+    s.add_argument("--top", type=int, default=3)
+    s.add_argument("--all", dest="everything", action="store_true", help="全部上游子技能")
+    s.set_defaults(fn=cmd_plan)
+
+    s = sub.add_parser("fetch", help="从 Gitee 按需下载子技能（默认只出计划，加 --yes 才写盘）")
+    s.add_argument("names", nargs="*")
+    s.add_argument("--workflow")
+    s.add_argument("--query")
+    s.add_argument("--top", type=int, default=3)
+    s.add_argument("--all", dest="everything", action="store_true")
+    s.add_argument("--yes", action="store_true", help="确认执行；不加则只打印计划")
+    s.add_argument("--force", action="store_true", help="连本地已有的文件一起重下")
+    s.add_argument("--jobs", type=int, default=FETCH_JOBS, help=f"并发数（默认 {FETCH_JOBS}）")
+    s.set_defaults(fn=cmd_fetch)
 
     a = p.parse_args()
     a.fn(a)
