@@ -26,7 +26,7 @@ Skill for generating **concise, clinician-focused** medical treatment plans acro
 - `regulatory_compliance.md` - HIPAA compliance, billing documentation, quality measures
 - `specialty_specific_guidelines.md` - Detailed guidelines for each treatment plan type
 
-### 📄 LaTeX Templates (7 professional templates)
+### 📄 LaTeX Templates (6 professional templates)
 
 - `one_page_treatment_plan.tex` - **FIRST CHOICE** - Dense, scannable 1-page format (like precision oncology reports)
 - `general_medical_treatment_plan.tex` - Comprehensive medical care planning
@@ -34,7 +34,10 @@ Skill for generating **concise, clinician-focused** medical treatment plans acro
 - `mental_health_treatment_plan.tex` - Psychiatric and behavioral health
 - `chronic_disease_management_plan.tex` - Long-term disease management
 - `perioperative_care_plan.tex` - Surgical and procedural care
-- `pain_management_plan.tex` - Multimodal pain treatment
+
+> A pain-management template (`pain_management_plan.tex`) existed upstream but is **not
+> bundled here**, and it cannot be obtained from this repository. Start a chronic-pain
+> plan from `one_page_treatment_plan.tex` instead.
 
 ### 🔧 Validation Scripts (4 automation tools)
 
@@ -62,7 +65,6 @@ Available template types:
 - `mental_health`
 - `chronic_disease`
 - `perioperative`
-- `pain_management`
 
 ### Compile to PDF
 
@@ -227,7 +229,7 @@ Key Components:
 ```
 Goal: Multimodal pain management plan
 
-Template: pain_management_plan.tex
+Template: one_page_treatment_plan.tex   [no bundled pain template]
 
 Key Components:
 - Pain assessment: Location, intensity, functional impact
@@ -445,7 +447,7 @@ Match the template to your primary clinical focus:
 - **Chronic medical conditions** → general_medical or chronic_disease
 - **Post-surgery or injury** → rehabilitation or perioperative
 - **Psychiatric conditions** → mental_health
-- **Pain as primary issue** → pain_management
+- **Pain as primary issue** → no bundled template; start from `one_page`
 
 ### What if my patient has multiple conditions?
 

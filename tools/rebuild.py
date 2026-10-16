@@ -267,9 +267,10 @@ def collect(src_skills, path_prefix="skills", origin="upstream"):
 def write_manifest(out, records):
     """Record what each bundled sub-skill is made of, so the package can ship without them.
 
-    The submission build excludes `skills/` — 1616 files and ~26 MB, over skillhub's
-    200-file / 10 MB upload cap. What ships instead is `registry.json` (what exists) plus
-    this manifest (what each skill consists of, and where to get it). `dispatch.py plan`
+    The submission build excludes `skills/` — over a thousand files and ~20 MB, far past
+    the upload cap of the hosts that accept this package. What ships instead is
+    `registry.json` (what exists) plus this manifest (what each skill consists of, and
+    where to get it). `dispatch.py plan`
     reads it offline to answer "4 files / 28 KB"; `dispatch.py fetch` downloads exactly
     those paths from the Gitee raw endpoint. Sizes are recorded so a truncated download
     can be detected without shipping a second copy of the content.
@@ -414,11 +415,13 @@ def main():
     print("[rebuild] note   : mcp/catalog.json is a hand transcription of the upstream catalog.ts and is not rebuilt.")
 
     # The copy above overwrites the tree with pristine upstream files, so any fix
-    # kept in tools/patches/ has to be laid back down on top of it.
+    # kept in tools/patches/ has to be laid back down on top of it — and any file this
+    # package must not redistribute has to be dropped again.
     if not a.no_copy:
         sys.path.insert(0, str(Path(__file__).resolve().parent))
         try:
             from apply_patches import apply as apply_local_patches
+            from apply_patches import remove as remove_withheld_files
         except Exception as exc:  # pragma: no cover - defensive
             print(f"[rebuild] WARNING: could not load apply_patches ({exc}); tree left unpatched", file=sys.stderr)
         else:
@@ -426,6 +429,8 @@ def main():
             _applied, _skipped = apply_local_patches()
             if _skipped:
                 print(f"[rebuild] WARNING: {len(_skipped)} patch(es) had no target", file=sys.stderr)
+            print("[rebuild] withheld files:")
+            _removed, _gone = remove_withheld_files()
 
     # Written last on purpose. The manifest records byte sizes, and apply_patches above
     # rewrites some of the files those sizes describe — measuring first would make every

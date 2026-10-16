@@ -8,9 +8,10 @@
     openscience-dispatcher-skill.zip   submission build — flat root, no skills/
     openscience-dispatcher-full.zip    self-hosted build — everything, wrapped
 
-Why two. skillhub caps an upload at 200 files and 10 MB *unpacked*, and clawhub is a
-forum upload with the same shape of limit; the full tree is 1665 files / 21 MB because
-it carries all 312 upstream sub-skills. The submission build drops `skills/` and ships
+Why two. The full tree is 1665 files / 21 MB because it carries all 312 upstream
+sub-skills, and no host that accepts this package will swallow that. Verified 2026-10-16:
+skillhub.cn caps an upload at 10 MB with ~200 files *suggested*; clawhub caps a bundle at
+50 MB with **no** file-count limit. The submission build drops `skills/` and ships
 `manifest.json` instead, so `dispatch.py fetch` can pull back exactly the files a task
 needs — from the Gitee repo, which always keeps `skills/` because that is the source
 those downloads come from.
@@ -37,8 +38,9 @@ SKIP_FILES = {".DS_Store", "Thumbs.db", "desktop.ini"}
 SKIP_SUFFIX = (".pyc", ".pyo", ".part")
 SLIM_EXCLUDE_TOP = frozenset({"skills"})
 
-# skillhub upload caps. Reported, not enforced: a maintainer may still want the file
+# skillhub.cn upload caps. Reported, not enforced: a maintainer may still want the file
 # even when it is over, but silently shipping an unpublishable archive is not useful.
+# clawhub's only stated cap is 50 MB per bundle, so clearing these clears that too.
 LIMIT_FILES = 200
 LIMIT_BYTES = 10 * 1024 * 1024
 
@@ -89,10 +91,10 @@ def report(tag, info, expect_root=None):
         if leaks:
             print(f"   ⚠ 混入 {len(leaks)} 个应排除的条目，例如 {leaks[0]}")
     if info["files"] > LIMIT_FILES or info["raw"] > LIMIT_BYTES:
-        print(f"   ⚠ 超出 skillhub 上限（{LIMIT_FILES} 文件 / "
+        print(f"   ⚠ 超出 skillhub.cn 上限（{LIMIT_FILES} 文件 / "
               f"{LIMIT_BYTES / 1048576:.0f} MB 解压），这个包投不上去")
     else:
-        print(f"   ✓ 在 skillhub 上限内（{LIMIT_FILES} 文件 / "
+        print(f"   ✓ 在 skillhub.cn 上限内（{LIMIT_FILES} 文件 / "
               f"{LIMIT_BYTES / 1048576:.0f} MB 解压）")
 
 

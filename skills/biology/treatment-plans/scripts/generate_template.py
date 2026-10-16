@@ -39,12 +39,12 @@ TEMPLATES = {
         'file': 'perioperative_care_plan.tex',
         'description': 'For surgical and procedural patient management',
     },
-    'pain_management': {
-        'name': 'Pain Management Plan',
-        'file': 'pain_management_plan.tex',
-        'description': 'For acute and chronic pain treatment (multimodal approach)',
-    },
 }
+# NOTE (openscience-dispatcher): the 'pain_management' entry was removed together with
+# assets/pain_management_plan.tex, which this package no longer ships or hosts. Leaving
+# the entry in place would make `--type pain_management` die inside copy_template() with
+# FileNotFoundError. That template is not obtainable from this repository -- write a
+# chronic-pain plan from one_page_treatment_plan.tex instead.
 
 
 def get_templates_dir():
@@ -76,7 +76,10 @@ def interactive_selection():
 
     while True:
         try:
-            choice = input("\nSelect template number (1-6) or 'q' to quit: ").strip().lower()
+            # Counted, not hard-coded: the list shrank once already when the
+            # pain-management template was withdrawn.
+            choice = input("\nSelect template number (1-{}) or 'q' to quit: "
+                           .format(len(TEMPLATES))).strip().lower()
 
             if choice == 'q':
                 print("Exiting...")
@@ -179,7 +182,7 @@ Examples:
 
 Available template types:
   general_medical, rehabilitation, mental_health, chronic_disease,
-  perioperative, pain_management
+  perioperative
         """,
     )
 

@@ -1,0 +1,16 @@
+# Files under skills/ that this package must not redistribute.
+#
+# They are deleted after the tree is copied and the patches are laid down, because
+# `skills/` is a byte-for-byte vendor of the upstream tree: deleting a file by hand is
+# silently undone by the next `rebuild.py`, and editing it is not an option either when
+# hosting that very content is what got it refused.
+#
+# One repo-relative path per line. Blank lines and lines starting with '#' are ignored.
+# A path that is already absent is not an error — the list is idempotent.
+
+# Withdrawn 2026-10-16.
+# Contains concrete opioid prescribing tables (Oxycodone 5 mg q6h, MME thresholds,
+# naloxone co-prescribing). Gitee's content-compliance filter refuses to serve it —
+# HTTP 451 Unavailable For Legal Reasons — so it could be neither fetched on demand nor
+# redistributed. The three files that pointed at it were patched to drop the pointer.
+skills/biology/treatment-plans/assets/pain_management_plan.tex

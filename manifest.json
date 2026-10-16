@@ -12,8 +12,8 @@
   ],
   "totals": {
     "skills": 312,
-    "files": 1616,
-    "bytes": 20614662
+    "files": 1615,
+    "bytes": 20582202
   },
   "skills": {
   "skills/biology/anndata": [["references/best_practices.md", 12106], ["references/concatenation.md", 10504], ["references/data_structure.md", 8744], ["references/io_operations.md", 9456], ["references/manipulation.md", 11866], ["SKILL.md", 10386]],
@@ -59,7 +59,7 @@
   "skills/biology/scikit-survival": [["references/competing-risks.md", 11986], ["references/cox-models.md", 5238], ["references/data-handling.md", 12094], ["references/ensemble-models.md", 9529], ["references/evaluation-metrics.md", 10850], ["references/svm-models.md", 11096], ["SKILL.md", 15102]],
   "skills/biology/scvi-tools": [["references/differential-expression.md", 14342], ["references/models-atac-seq.md", 9481], ["references/models-multimodal.md", 10570], ["references/models-scrna-seq.md", 9837], ["references/models-spatial.md", 11260], ["references/models-specialized.md", 10404], ["references/theoretical-foundations.md", 11723], ["references/workflows.md", 12508], ["SKILL.md", 7263]],
   "skills/biology/synthetic-biology": [["scripts/bifurcation.py", 20870], ["scripts/codon_optimize.py", 22377], ["scripts/gene_circuit.py", 17358], ["scripts/sbml_model.py", 17373], ["SKILL.md", 20572]],
-  "skills/biology/treatment-plans": [["assets/chronic_disease_management_plan.tex", 29371], ["assets/general_medical_treatment_plan.tex", 23289], ["assets/medical_treatment_plan.sty", 5404], ["assets/mental_health_treatment_plan.tex", 34509], ["assets/one_page_treatment_plan.tex", 5377], ["assets/pain_management_plan.tex", 33326], ["assets/perioperative_care_plan.tex", 30005], ["assets/quality_checklist.md", 15081], ["assets/rehabilitation_treatment_plan.tex", 30462], ["assets/STYLING_QUICK_REFERENCE.md", 3912], ["README.md", 16970], ["references/goal_setting_frameworks.md", 16554], ["references/intervention_guidelines.md", 19024], ["references/regulatory_compliance.md", 17565], ["references/specialty_specific_guidelines.md", 26678], ["references/treatment_plan_standards.md", 16643], ["scripts/check_completeness.py", 9771], ["scripts/generate_template.py", 7296], ["scripts/timeline_generator.py", 12675], ["scripts/validate_treatment_plan.py", 12098], ["SKILL.md", 53075]],
+  "skills/biology/treatment-plans": [["assets/chronic_disease_management_plan.tex", 29371], ["assets/general_medical_treatment_plan.tex", 23289], ["assets/medical_treatment_plan.sty", 5404], ["assets/mental_health_treatment_plan.tex", 34509], ["assets/one_page_treatment_plan.tex", 5377], ["assets/perioperative_care_plan.tex", 30005], ["assets/quality_checklist.md", 15081], ["assets/rehabilitation_treatment_plan.tex", 30462], ["assets/STYLING_QUICK_REFERENCE.md", 3912], ["README.md", 17179], ["references/goal_setting_frameworks.md", 16554], ["references/intervention_guidelines.md", 19024], ["references/regulatory_compliance.md", 17565], ["references/specialty_specific_guidelines.md", 26678], ["references/treatment_plan_standards.md", 16643], ["scripts/check_completeness.py", 9771], ["scripts/generate_template.py", 7672], ["scripts/timeline_generator.py", 12675], ["scripts/validate_treatment_plan.py", 12098], ["SKILL.md", 53356]],
   "skills/chemistry/admet-prediction": [["references/endpoints_guide.md", 24056], ["scripts/compare_drugs.py", 19286], ["scripts/drug_likeness.py", 25625], ["scripts/predict_admet.py", 32020], ["scripts/predict_toxicity.py", 24524], ["SKILL.md", 6977]],
   "skills/chemistry/admet-reasoning": [["scripts/reason_admet.py", 11447], ["SKILL.md", 2553]],
   "skills/chemistry/binding-affinity": [["references/scoring_methods.md", 7575], ["scripts/batch.py", 9249], ["scripts/consensus.py", 14212], ["scripts/output_guard.py", 2145], ["scripts/predict.py", 17520], ["scripts/rescore.py", 12079], ["SKILL.md", 9925]],
