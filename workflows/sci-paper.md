@@ -1,3 +1,29 @@
+---
+# 本工作流用到的子技能。新增项请同步到 requires：dispatch.py fetch --workflow sci-paper
+# 会据此只下载这一次任务真正需要的文件，而不是把 312 个子技能整包拉下来。
+requires:
+  - unified-research-finder        # 学术检索（本包自带，无需下载）
+  - meta-analysis-figures          # 森林图 / 漏斗图 / PRISMA / 偏倚风险（本包自带）
+  - pubmed-database                # 检索主力
+  - openalex-database              # 检索补充
+  - perplexity-search              # 联网查证
+  - literature-review              # PRISMA 筛选流程
+  - citation-management            # 引文管理
+  - sources                        # 来源追溯
+  - verify                         # 事实核验
+  - statistical-analysis           # 统计分析
+  - statsmodels                    # 统计建模
+  - matplotlib                     # 底层绘图
+  - seaborn                        # 统计图形
+  - scientific-schematics          # 机制示意图
+  - scientific-critical-thinking   # 批判性评估
+  - scientific-writing             # 英文写作
+  - venue-templates                # 期刊模板与投稿格式
+  - latex-posters                  # 会议海报
+  - peer-review                    # 模拟同行评审
+  - scholar-evaluation             # 学术价值评估
+---
+
 # Workflow: sci-paper — 从零到一篇 SCI 论文初稿
 
 <invocation>
@@ -264,6 +290,14 @@ $ARGUMENTS = 用户给出的题目或需求描述（可为空）
 
 **门控**：无未填充占位符；每个数字可回溯；所有引用可解析。
 
+> ⚠️ **实现陷阱（实测踩过，必读）**：`unified-research-finder` 的 PubMed `efetch` 只返回
+> `pmid / title / authors[] / journal / pubdate / abstract / doi / doi_url / pubmed_url`，
+> **不返回卷号、期号、页码**。因此 `.bib` **必须由脚本从原始 JSON 程序化生成**，
+> 只写 API 真实返回的字段；卷期页码一律**留空并在文件头注明原因**。
+> 若图省事手写这些字段，就是凭记忆编造（违反 R1/R2）——本工作流首次实测时正是这样翻车的。
+> 卷期页码属"投稿前由作者按目标期刊格式从出版社页面手工补全"的事项，写进 Stage 9 的待办清单。
+> 若发现已生成的文件含未经验证的字段，**推翻重生成**，不要修补。
+
 ---
 
 ### Stage 8 — 反造假与质量审计
@@ -283,6 +317,18 @@ $ARGUMENTS = 用户给出的题目或需求描述（可为空）
 **产物**：`08-audit.md` — 逐项结论 + 未通过项 + 修正记录
 
 **门控**：**引用解析率 100%**；数字不一致项已全部修正；无"未测"项被隐去。
+
+> ⚠️ **DOI 核验的正确做法（实测）**：用 **Crossref REST API** ——
+> `https://api.crossref.org/works/<doi>`（带 `User-Agent`，遵守 polite pool）。
+> **不要**用 `https://doi.org/<doi>` 发 HTTP HEAD：多数出版社会对 HEAD 请求返回 403/超时，
+> 实测 24 个有效 DOI 只有 10 个能通过，**假阴性率过半**，会把好文献误判为无效。
+> 若 Crossref 返回的标题含 HTML 标签（如 `<i>In Vivo</i>`），须先剥标签再比对，否则会误报不一致。
+> 对 PubMed 未收录 DOI 的文献，可再用 Crossref 书目检索（`query.bibliographic`）反查；
+> **反查不到就如实记为"PubMed 未收录 DOI"，绝不补一个像样的**。反查命中的其他文献若未经阅读，也不得引用。
+
+> ⚠️ **数字核验的假阳性**：正文用阿拉伯数字而源摘要用英文数词（`Twelve` / `Eight`），
+> 或源摘要把小数点写成间隔号（`6·33`，见于部分期刊排版），逐字检索会报"未命中"。
+> 这类必须人工复核判定为**写法差异**而非编造，并在审计报告中逐条写明理由。
 
 > 任何一项不通过，回到对应阶段修正，不许"先这样"。**发现编造内容必须删除并在审计文件中记录。**
 

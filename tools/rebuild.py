@@ -21,6 +21,10 @@ Two trees feed one registry:
 rebuild cannot silently drop them. `tools/aliases.json` then layers Chinese trigger
 words onto skills whose upstream metadata is English-only, which is what makes those
 skills reachable from a Chinese query.
+
+A third artifact is written for the same reason the first two exist — `manifest.json`,
+the per-skill file inventory (paths + byte sizes) that lets the submission build drop
+`skills/` entirely and have `dispatch.py fetch` pull back only what a task needs.
 """
 from __future__ import annotations
 
@@ -30,11 +34,24 @@ import re
 import shutil
 import sys
 from collections import Counter
+from datetime import datetime
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+try:
+    from sources import SOURCE_HOME, SOURCE_REF
+except Exception:  # pragma: no cover - defensive, sources.py ships with this package
+    SOURCE_HOME, SOURCE_REF = "", "main"
 
 SRC_SUBPATH = Path("backend") / "cli" / "skills"
 LOCAL_DIRNAME = "local-skills"
 ALIASES_FILE = Path(__file__).resolve().parent / "aliases.json"
+MANIFEST_NAME = "manifest.json"
+
+# Files that are never part of a skill and never worth a download round-trip.
+SKIP_FILE_NAMES = {".DS_Store", "Thumbs.db", "desktop.ini"}
+SKIP_FILE_SUFFIX = (".pyc", ".pyo")
+SKIP_DIR_NAMES = {"__pycache__", ".git", ".ipynb_checkpoints"}
 
 
 def load_aliases():
@@ -247,6 +264,76 @@ def collect(src_skills, path_prefix="skills", origin="upstream"):
     return records
 
 
+def write_manifest(out, records):
+    """Record what each bundled sub-skill is made of, so the package can ship without them.
+
+    The submission build excludes `skills/` — 1616 files and ~26 MB, over skillhub's
+    200-file / 10 MB upload cap. What ships instead is `registry.json` (what exists) plus
+    this manifest (what each skill consists of, and where to get it). `dispatch.py plan`
+    reads it offline to answer "4 files / 28 KB"; `dispatch.py fetch` downloads exactly
+    those paths from the Gitee raw endpoint. Sizes are recorded so a truncated download
+    can be detected without shipping a second copy of the content.
+
+    Local skills are skipped: they ship inside the package and need no round trip.
+    """
+    skills, files, total = {}, 0, 0
+    for r in sorted(records, key=lambda x: x["path"]):
+        if r.get("origin") == "local":
+            continue
+        base = out / r["path"]
+        if not base.is_dir():
+            continue
+        rows = []
+        for p in sorted(base.rglob("*")):
+            if not p.is_file():
+                continue
+            if p.name in SKIP_FILE_NAMES or p.name.endswith(SKIP_FILE_SUFFIX):
+                continue
+            if SKIP_DIR_NAMES & set(p.relative_to(base).parts[:-1]):
+                continue
+            try:
+                n = p.stat().st_size
+            except OSError:
+                continue
+            rows.append((p.relative_to(base).as_posix(), n))
+            total += n
+        if rows:
+            skills[r["path"]] = rows
+            files += len(rows)
+
+    if not skills:
+        print("[rebuild] manifest: no skill files found under skills/ — existing manifest kept",
+              file=sys.stderr)
+        return skills
+
+    home = (SOURCE_HOME or "").rstrip("/")
+    ref = SOURCE_REF or "main"
+    head = {
+        "_note": ("每个子技能由哪些文件组成、各多大，以及去哪里取。"
+                  "投稿包不含 skills/；dispatch.py 只下载当前任务真正需要的文件。"),
+        "generated": datetime.now().strftime("%Y-%m-%d"),
+        "source": {"provider": "gitee", "home": home, "ref": ref, "raw": f"{home}/raw/{ref}"},
+        "shipped": [LOCAL_DIRNAME],
+        "totals": {"skills": len(skills), "files": files, "bytes": total},
+    }
+    # Hand-assembled: one line per skill keeps the file diffable while staying well
+    # under what json.dumps(indent=1) produces for 1600 nested pairs.
+    body = ",\n".join(
+        '  %s: [%s]' % (
+            json.dumps(path, ensure_ascii=False),
+            ", ".join("[%s, %d]" % (json.dumps(f, ensure_ascii=False), n) for f, n in rows),
+        )
+        for path, rows in sorted(skills.items())
+    )
+    text = json.dumps(head, ensure_ascii=False, indent=2).rstrip()
+    assert text.endswith("}")
+    (out / MANIFEST_NAME).write_text(
+        text[:-1].rstrip() + ',\n  "skills": {\n' + body + "\n  }\n}\n", encoding="utf-8")
+    print(f"[rebuild] manifest: {len(skills)} skill(s) / {files} file(s) / "
+          f"{total / 1048576:.1f} MB on-demand payload → {MANIFEST_NAME}")
+    return skills
+
+
 def main():
     ap = argparse.ArgumentParser(description="Rebuild skills/ and registry.json from an OpenScience checkout")
     ap.add_argument("--source", required=True, help="path to an OpenScience repository checkout")
@@ -339,6 +426,11 @@ def main():
             _applied, _skipped = apply_local_patches()
             if _skipped:
                 print(f"[rebuild] WARNING: {len(_skipped)} patch(es) had no target", file=sys.stderr)
+
+    # Written last on purpose. The manifest records byte sizes, and apply_patches above
+    # rewrites some of the files those sizes describe — measuring first would make every
+    # patched file look corrupt the moment someone downloaded it.
+    write_manifest(out, records)
 
 
 if __name__ == "__main__":

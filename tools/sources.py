@@ -12,6 +12,13 @@ OSN = "OSN"
 REPO = "https://github.com/synthetic-sciences/openscience"
 BRANCH = "main"
 
+# ── 分发源（本包自身）──────────────────────────────────────────────────────
+# 单一 Gitee 源。投稿到 skillhub / clawhub 的包不含 skills/（1616 文件 / 约 26 MB，
+# 超过平台的 200 文件与 10 MB 上限），子技能改为按需从这里的 raw 端点拉取；
+# raw 会 302 到 raw.giteeusercontent.com，大陆直连可用，不需要 git 也不需要令牌。
+SOURCE_HOME = "https://gitee.com/georgechou17/open-science-dispatcher"
+SOURCE_REF = "main"
+
 URLS = {
 # ── ml-training (52) ────────────────────────────────────────────────
 "adaptyv": ("Adaptyv Bio", "https://www.adaptyvbio.com/"),

@@ -1,7 +1,7 @@
 ---
 name: openscience-dispatcher
-version: 1.3.1
-description: 综合科研调度器（OpenScience Dispatcher）——把 312 个上游 OpenScience 子技能（16 类：ml-training / biology / databases / llm-tools / chemistry / physics / coding / research / cloud-compute / data-engineering / writing / ml-inference / visualization / quantum / other / document-parsing）加 2 个本包自研子技能（学术搜索 unified-research-finder、Meta 分析图件 meta-analysis-figures），共 314 个，与 7 个按需安装的 MCP 工具，在通用 AI Agent 平台上编排成类 OpenScience 的科研工作流。**内置端到端 SCI 论文工作流**：面向零科研基础的本科生，从一句话题目经信息采集、可行性查证、检索、PRISMA 筛选、数据提取、统计、图表、英文稿、反造假审计到投稿准备，全程由本调度器串联子技能完成。触发场景：从零写一篇 SCI 论文、系统综述 / Meta 分析、森林图 / 漏斗图 / PRISMA 流程图 / 偏倚风险图、文献检索与循证写作（PubMed / Google 学术 / 学术镜像 / 影响因子）、单细胞与组学分析、结构生物学与药物设计、化学信息学、科学数据库查询（UniProt / PDB / ChEMBL / PubMed 等）、模型训练与微调、GPU 云算力调度、量子计算、科学可视化、同行评审；或用户直接提到 OpenScience、子技能、科研调度、scientific workflows。
+version: 1.4.0
+description: 综合科研调度器（OpenScience Dispatcher）——把 312 个上游 OpenScience 子技能（16 类：ml-training / biology / databases / llm-tools / chemistry / physics / coding / research / cloud-compute / data-engineering / writing / ml-inference / visualization / quantum / other / document-parsing）加 2 个本包自研子技能（学术搜索 unified-research-finder、Meta 分析图件 meta-analysis-figures），共 314 个，与 7 个按需安装的 MCP 工具，在通用 AI Agent 平台上编排成类 OpenScience 的科研工作流。**本体很轻**：解压约 1.5 MB / 51 个文件，312 个上游子技能不随包分发，用户需要哪个才从 Gitee 按需下载哪个（`dispatch.py plan` 离线预估体积、`fetch` 执行，**下载前必先征得用户同意**）。**内置端到端 SCI 论文工作流**：面向零科研基础的本科生，从一句话题目经信息采集、可行性查证、检索、PRISMA 筛选、数据提取、统计、图表、英文稿、反造假审计到投稿准备，全程由本调度器串联子技能完成。触发场景：从零写一篇 SCI 论文、系统综述 / Meta 分析、森林图 / 漏斗图 / PRISMA 流程图 / 偏倚风险图、文献检索与循证写作（PubMed / Google 学术 / 学术镜像 / 影响因子）、单细胞与组学分析、结构生物学与药物设计、化学信息学、科学数据库查询（UniProt / PDB / ChEMBL / PubMed 等）、模型训练与微调、GPU 云算力调度、量子计算、科学可视化、同行评审；或用户直接提到 OpenScience、子技能、科研调度、scientific workflows。
 agent_created: true
 license: Apache-2.0
 triggers:
@@ -36,10 +36,18 @@ triggers:
 
 # OpenScience Dispatcher
 
-把 314 个科研子技能当作**可检索的能力库**（312 个上游 + 2 个本包自研），把 7 个 MCP 连接器当作**按需安装的外部工具**，由本调度器统一路由、加载、执行。
+把 314 个科研子技能当作**可检索的能力库**（312 个上游按需下载 + 2 个本包自研随包），把 7 个 MCP 连接器当作**按需安装的外部工具**，由本调度器统一路由、加载、执行。
 
 本文件所在目录记作 `$OSD`（即本包根目录）。安装到 Agent 平台后通常位于 `<用户目录>/.workbuddy/skills/openscience-dispatcher`。
 所有命令都在 `$OSD` 内执行；**不要**把 `$OSD/skills/**/SKILL.md` 当作顶层技能去调用——它们只能经调度器访问。
+
+> ⚠️ **312 个上游子技能不随包分发。** 本包为投稿 skillhub / clawhub 做过瘦身：包内只有**索引**
+> （`registry.json`）与**文件清单**（`manifest.json`），没有子技能正文——整包解压 1.5 MB，而带全部
+> 子技能要 21 MB，超出平台的 200 文件 / 10 MB 上传上限。用户真正要用到某个子技能时：
+> `dispatch.py plan <名称>` 预估体积 → **问用户要不要下载** → 同意后 `dispatch.py fetch <名称> --yes`，
+> 只拉这一次任务需要的文件（单个子技能通常几万字节）。
+> 本包自研的 2 个技能（`unified-research-finder`、`meta-analysis-figures`）**随包分发、开箱即用**。
+> 完整规则见第五节「按需下载协议」。
 
 ---
 
@@ -121,6 +129,9 @@ triggers:
 | `mcp list` | 列出 7 个 MCP 连接器、读写操作与前置要求 |
 | `mcp install <id>` | 生成该连接器的安装方案（默认只打印，`--write` 才落盘） |
 | `workflow show <id>` | 读取端到端工作流定义（见第二节） |
+| `status` | 随包 / 已下载 / 未下载的规模统计 |
+| `plan <名称...>` | **离线**预估要下载多少文件、多大（不联网、不写盘） |
+| `fetch <名称...> --yes` | 从 Gitee 按需下载（不加 `--yes` 只打印计划，不写任何文件） |
 
 `query` 的排序依据：名称精确匹配 > 名称包含 > 标签 > 描述 > 功能摘要 > 分类。
 匹配按**词边界**进行（`meta` 不会命中 `metabolomics`），而非裸子串。
@@ -149,7 +160,8 @@ triggers:
 
 ## 四、路由表（16 分类 / 314 子技能：上游 312 + 本包自研 2）
 
-> 自研子技能（`origin: local`，位于 `local-skills/`）在表中以 **(自研)** 标出。
+> 自研子技能（`origin: local`，位于 `local-skills/`）在表中以 **(自研)** 标出——它们**随包分发**。
+> 其余 312 个上游子技能**按需下载**：下表是它们的分类与规模，不代表它们已经在本地。
 
 | 分类 | 数量 | 何时路由到这里 | 代表子技能 |
 |---|---|---|---|
@@ -179,10 +191,42 @@ triggers:
 3. **检索**：跑 `query`。命中不理想就换英文术语或加 `--category`。
 4. **选 1–3 个**：只挑真正要用的。子技能之间常有明确分工（例如 `anndata` 管数据结构、`scanpy` 管分析流程）。
 5. **载入**：`load <name>`。返回的 `Base directory` 就是该子技能的根，其 `scripts/`、`references/`、`assets/` 都在那里。
+   若返回「**尚未下载到本地**」（退出码 4），说明该子技能不在包内——按下方「按需下载协议」先问用户再 `fetch`。
 6. **执行**：严格按子技能正文的步骤走；需要跑脚本时，在该 `Base directory` 内用 Bash 运行。
    **子技能目录视为只读**——不要往里写文件；产物写到用户工作目录或临时目录。
 7. **补外部工具**：任务需要触达外部系统（GitHub、云存储、托管 GPU、ELN）时，才走第六节的 MCP 流程。
 8. **自检（可选）**：交付前沿用 `research` 类的 `peer-review` / `scholar-evaluation` 做一轮质量复核。
+
+### 按需下载协议（**先问，再下**）
+
+`skills/` 下的 312 个上游子技能**不在包里**。包内只有 `registry.json`（有什么）与 `manifest.json`
+（每个子技能由哪些文件组成、各多大、去哪里取）。用到时才下载，且**只下载这一次任务需要的文件**。
+
+```bash
+dispatch.py status                            # 我现在有什么
+dispatch.py plan pubmed-database              # ← 先预览：几个文件、多大（离线，不联网、不写盘）
+dispatch.py fetch pubmed-database             # 不加 --yes：只打印计划，一个字节都不写
+dispatch.py fetch pubmed-database --yes       # 用户同意之后才执行
+dispatch.py plan --workflow sci-paper         # 整条工作流需要哪些、共多大
+dispatch.py fetch --workflow sci-paper --yes  # 一次拉齐该工作流 requires 里列的全部子技能
+dispatch.py plan --all                        # 全量 312 个技能要多大（离线预估）
+dispatch.py fetch --all --yes                 # 需要离线全量使用时一次拉完（约 19.7 MB）
+```
+
+**六条规则：**
+
+1. **绝不静默下载。** `fetch` 不加 `--yes` 永远只打印计划。你要先把「名称 + 文件数 + 体积」告诉用户，
+   得到明确同意后再加 `--yes` 重跑。
+2. **只下这次任务需要的。** 单点任务下 1–3 个；长流程用 `fetch --workflow <id>`。
+   没有理由为了一次检索把 19.7 MB 全拉下来。
+3. **退出码 4 = 需要下载，不是「技能不存在」。** `load` 遇到未下载的子技能会返回 4 并打印下载指引；
+   此时**不要**凭名字猜它的内容，也不要假装读过了。
+4. **源只有一个**：`https://gitee.com/georgechou17/open-science-dispatcher` 的 raw 端点，逐文件直连，
+   不需要 git、不需要令牌。要换 fork / 镜像用 `OSD_SOURCE_HOME` 与 `OSD_SOURCE_REF` 覆盖。
+5. **可续传、可重复。** 每个文件按 `manifest.json` 里的字节数校验；已下好且大小相符的自动跳过，
+   中断后重跑同一条命令即可。大小不符会被当作失败丢弃，不会留下半个假技能。
+6. **离线环境先备齐。** 若用户网络受限或要求断网可用，先 `fetch --all --yes` 一次性备齐
+   （312 个技能 / 1616 个文件；其中 **1 个文件**被源站合规过滤拦截，见第九节）。
 
 **委派**：当流程够长（多子技能串联，或需要读大量数据库）时，把子技能执行丢给子代理，只让主上下文接收结论。这样能避免把每个子技能的全文都堆进主上下文。
 
@@ -269,12 +313,14 @@ export OSD_MCP_CONFIG="$HOME/my-agent/mcp.json"     # bash
 ```
 openscience-dispatcher/
 ├── SKILL.md            ← 本文件（调度协议）
-├── dispatch.py         ← 检索引擎（list / category / query / load / mcp / net / workflow）
+├── dispatch.py         ← 检索引擎（list / category / query / load / status / plan / fetch / mcp / net / workflow）
 ├── dispatch.cmd        ← Windows 启动器（自动探测 Python）
 ├── registry.json       ← 314 条子技能索引（名称/分类/描述/功能/标签/路径/origin）
+├── manifest.json       ← 312 个上游子技能的文件清单 + 字节数 + Gitee 源（按需下载的依据）
 ├── workflows/          ← 端到端工作流定义（文件名即 id，无需登记）
 │   └── sci-paper.md    ← 从零写 SCI 论文：10 阶段 + 门控 + 铁律 + 产物规范
 ├── skills/             ← 312 个**上游**子技能，按 16 分类分层（每次重建覆盖，勿手改）
+│   │                     投稿包**不含**此目录，由 dispatch.py fetch 从 Gitee 按需下载回来
 │   └── <category>/<name>/{SKILL.md, scripts/, references/, assets/}
 ├── local-skills/       ← 2 个**本包自研**子技能（手动维护，重建不覆盖）
 │   ├── research/unified-research-finder/    ← 学术搜索（PubMed / Google 学术 / 镜像 / 影响因子）
@@ -288,6 +334,7 @@ openscience-dispatcher/
 │   ├── patches/        ← 对上游 bug 的最小修复（重建后自动回填）
 │   ├── gen_readme.py   ← 生成 README.md
 │   ├── make_demo_figures.py ← 重建 README 效果图到 docs/figures/
+│   ├── package.py      ← 打包：投稿精简包（无 skills/，扁平根）与自用全量包
 │   └── sources.py      ← 源仓库映射（上游 / 自研 / MCP）
 ├── docs/figures/       ← README 顶部效果图（森林图 / 漏斗图 / PRISMA / RoB 2 / KM）
 ├── README.md
@@ -300,7 +347,17 @@ openscience-dispatcher/
 
 子技能保持上游 `<分类>/<技能>/` 的原始分层，因此可以直接与上游做目录级 diff 或整目录替换。
 **两类目录的维护方式不同**：`skills/` 每次重建都会被上游覆盖，要修就改 `tools/patches/`；
-`local-skills/` 是自研内容，直接编辑即可。二者最终都汇入 `registry.json`。
+`local-skills/` 是自研内容，直接编辑即可。二者最终都汇入 `registry.json`，
+并由 `rebuild.py` 汇总成 `manifest.json`（按需下载的文件清单）。
+
+**两种发行形态**（`tools/package.py` 一次产出）：
+
+| 产物 | 内容 | 规模 | 用途 |
+|---|---|---|---|
+| `openscience-dispatcher-skill.zip` | 扁平根目录、**不含 `skills/`** | 51 文件 / 解压 1.5 MB | 投稿 skillhub / clawhub |
+| `openscience-dispatcher-full.zip` | 含全部子技能，外加一层 `openscience-dispatcher/` | 1667 文件 / 解压 21 MB | 自用、离线 |
+
+Gitee 主仓库**始终保留 `skills/`**——它正是按需下载的源，删掉就没得下了。
 
 ---
 
@@ -324,3 +381,13 @@ openscience-dispatcher/
 | `mcp install --write` 拒绝写入 | 配置里还有 `<...>` 占位符；先把路径换成真实值再登记 |
 | 用户信息不全就想开写 | **停下来问**，一轮 ≤4 个问题；`sci-paper` 的 Stage 0 定义了"信息足够"的判据，禁止在信息不足时进入检索 |
 | 工作流中途被打断 | 读项目目录下 `00-brief.md` 末尾的进度表，从第一个未完成阶段继续，不要从头重做 |
+| 脚本报 `head/wc/mkdir/dirname: command not found` | 所在 Agent 的 Bash 是**精简版（仅 PortableGit）**，缺 coreutils。**改用解释器绝对路径直接调用**，且**不要接管道**（`\| head` 必失败）；建目录、写文件、统计一律交给 Python 做 |
+| 生成的 `.bib` 里出现卷号页码 | `efetch` 不返回这些字段，说明是手写编造的。**推翻重生成**（见 `workflows/sci-paper.md` Stage 7 陷阱说明） |
+| DOI 核验大面积"失败" | 多半是用了 `doi.org` 的 HEAD 请求被出版社 403 拦截。改用 Crossref REST API（见 Stage 8 说明） |
+| `load` 报「尚未下载到本地」（退出码 4） | 正常状态，不是故障。先 `plan <名称>` 看体积 → 问用户 → `fetch <名称> --yes` |
+| `fetch` 下载失败或超时 | 用浏览器 / `curl` 直连 `.../raw/main/<路径>` 排查网络；失败文件会逐个列出，重跑同一条命令即可（已下好的按大小跳过） |
+| `fetch` 报「大小不符」 | 远端与 `manifest.json` 不一致（仓库刚更新过）。`tools/rebuild.py --no-copy` 重建清单后重试 |
+| `fetch` 报「被源站拦截」 | Gitee 的内容合规过滤拒绝了该路径（如上游 `treatment-plans/assets/pain_management_plan.tex` 含具体阿片类处方剂量，返回 HTTP 451）。**不要绕道抓取**：受影响的子技能仍可用，只是少一个资源文件；要彻底消除只能把该资源从仓库移除或替换 |
+| `fetch --all` 退出码 5 | 只有「被源站拦截」，没有网络失败。退出码 1 才代表网络 / 校验失败，退出码 0 才是全齐 |
+| `plan` / `fetch` 说某技能不在清单里 | `manifest.json` 过期或缺失；跑 `tools/rebuild.py --source <OpenScience 检出> --no-copy` |
+| 用户要求离线全量使用 | `dispatch.py fetch --all --yes`（约 19.7 MB / 1616 文件，大陆直连 Gitee 数分钟） |

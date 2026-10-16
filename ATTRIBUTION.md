@@ -21,6 +21,13 @@
 Two further sub-skills under `local-skills/` are **not** OpenScience content — see
 "Original to this project" below.
 
+> **Two distribution shapes.** `openscience-dispatcher-full.zip` contains everything described below;
+> `openscience-dispatcher-skill.zip` — the build published to skillhub / clawhub — **omits `skills/`
+> entirely** (51 files) and instead ships `manifest.json`, the file inventory that
+> `dispatch.py fetch` uses to pull individual sub-skills from the Gitee repository on demand.
+> Every upstream sub-skill is therefore still distributed under the terms below; the slim build
+> simply does not carry the files until they are fetched.
+
 The bundled sub-skills are **not the work of a single author**. Copyright holders:
 
 | Copyright holder | Sub-skills | License |
@@ -40,8 +47,9 @@ plus the third-party LaTeX packages bundled with the paper templates, are itemis
 ### Original to this project
 
 The dispatcher layer — `SKILL.md`, `dispatch.py`, `dispatch.cmd`, `registry.json`,
-`mcp/INSTALL.md`, `tools/rebuild.py`, `tools/gen_readme.py`, `tools/sources.py`,
-`tools/aliases.json`, `README.md`, `CHANGELOG.md` — is original work,
+`manifest.json`, `mcp/INSTALL.md`, `tools/rebuild.py`, `tools/gen_readme.py`, `tools/sources.py`,
+`tools/aliases.json`, `tools/package.py`, `tools/make_demo_figures.py`,
+`README.md`, `CHANGELOG.md` — is original work,
 distributed under the same Apache-2.0 terms as the bundle it ships with.
 Every dispatcher-layer source file carries an `SPDX-License-Identifier: Apache-2.0` header.
 
@@ -78,6 +86,11 @@ Do not read these values as license declarations for this repository. See
 
 `local-skills/` 下另有 2 篇子技能**不属于 OpenScience**，见下方「本项目原创」。
 
+> **两种发行形态。** `openscience-dispatcher-full.zip` 含下述全部内容；
+> 投稿 skillhub / clawhub 用的 `openscience-dispatcher-skill.zip` **完全不含 `skills/`**（共 51 个文件），
+> 代之以 `manifest.json`（文件清单），由 `dispatch.py fetch` 按需从 Gitee 仓库逐个取回子技能。
+> 也就是说上游每一篇子技能仍然按下方条款分发，只是精简包在取回之前不携带这些文件。
+
 子技能**并非单一作者的作品**，著作权人分布：
 
 | 著作权人 | 子技能 | 许可 |
@@ -95,8 +108,9 @@ Apache-2.0 部分见 [`LICENSE`](LICENSE) 与 [`NOTICE`](NOTICE)；MIT 部分及
 
 ### 本项目原创部分
 
-调度层 —— `SKILL.md`、`dispatch.py`、`dispatch.cmd`、`registry.json`、`mcp/INSTALL.md`、
-`tools/rebuild.py`、`tools/gen_readme.py`、`tools/sources.py`、`tools/aliases.json`、
+调度层 —— `SKILL.md`、`dispatch.py`、`dispatch.cmd`、`registry.json`、`manifest.json`、
+`mcp/INSTALL.md`、`tools/rebuild.py`、`tools/gen_readme.py`、`tools/sources.py`、
+`tools/aliases.json`、`tools/package.py`、`tools/make_demo_figures.py`、
 `README.md`、`CHANGELOG.md`
 —— 为本项目原创，与随包内容一致地以
 Apache-2.0 分发。调度层每个源文件均带 `SPDX-License-Identifier: Apache-2.0` 头。
