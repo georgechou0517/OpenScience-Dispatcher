@@ -1,5 +1,31 @@
 # Changelog
 
+## 1.4.1
+
+**移除被合规拦下的那一个文件，并修掉一个会让按需下载全线失败的换行符缺陷。**
+
+- **`pain_management_plan.tex` 已从仓库移除。** 这份上游 `treatment-plans` 模板含**具体阿片类处方
+  剂量表**（Oxycodone 5 mg q6h、MME 阈值、纳洛酮共处方），源站的内容合规过滤拒绝提供
+  （`HTTP 451`）——既取不回，也不宜随包分发。原先指向它的三个文件（`SKILL.md`、`README.md`、
+  `scripts/generate_template.py`）已同步改掉：模板清单从 7 个减为 6 个，`generate_template.py`
+  的模板表也移除了对应条目（否则 `--type pain_management` 会直接抛 `FileNotFoundError`）。
+  清单随之 **1616 → 1615 个文件**，19.7 → 19.6 MB。
+- **补丁层新增「移除」能力。** `tools/patches/remove.txt` 登记不得再分发的路径，
+  `apply_patches.py` 在**打完补丁之后**删除它们。此前只能手工删，而 `skills/` 是上游逐字节拷贝，
+  **下次重建就会把它悄悄带回来**。
+- **修掉一个会让按需下载全线失败的缺陷。** 补丁脚本用 `Path.write_text` 落盘，Windows 下会把
+  `\n` 静默改写成 `\r\n`。仓库以 `.gitattributes`（`* text=auto eol=lf`）统一按 LF 存储，
+  而 `manifest.json` 记录的是**字节数**——两者一旦不一致，那批文件**每一个下载都会判为校验失败**。
+  现已改为显式 `newline="\n"`，并在 `apply_patches.py` 里加了 CRLF 告警。
+- **修正一处平台门槛的误记。** 此前按「200 文件 / 解压 10 MB」准备投稿，那是**龙蜥 SkillHub**
+  （skillhub.openanolis.cn）的规则。**腾讯 skillhub.cn** 是「单次上传 ≤ 10 MB、建议 ≤ 200 个文件」；
+  **clawhub** 官方文档只给「总包 ≤ 50 MB」，**没有文件数上限**（见 `docs.openclaw.ai/clawhub/skill-format`）。
+  体积门槛三家都满足；真正需要留意的是 clawhub 强制 **MIT-0**、且元数据声明必须与实际行为一致。
+- 顺带修掉 `apply_patches.py` 的一处隐患：跳过规则原本按**文件名**匹配，会把上游真正的
+  `README.md` 补丁一并跳过；现改为按**相对路径**匹配。
+- 验证：全部 1615 个文件在「工作区字节数」与「提交后 blob 字节数」两个口径下都与清单一致
+  （4 个 `.pdf` 被 git 判为二进制、不参与归一，已单独核对）；检索排序与 v1.3.1 仍逐条一致。
+
 ## 1.4.0
 
 **按需下载**：把 312 个上游子技能从包体里挪出去，改为用到时才从 Gitee 拉取——使本包得以通过

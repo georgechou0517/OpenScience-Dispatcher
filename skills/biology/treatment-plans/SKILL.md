@@ -796,9 +796,10 @@ Use only when one-page format is insufficient due to complexity:
 4. **mental_health_treatment_plan.tex** - Psychiatric conditions, behavioral health
 5. **chronic_disease_management_plan.tex** - Complex chronic diseases, multiple conditions
 6. **perioperative_care_plan.tex** - Surgical patients, procedural care
-7. **pain_management_plan.tex** - Acute or chronic pain conditions
 
 **Note**: Even when using standard templates, adapt them to be concise (3-4 pages max) by removing non-essential sections.
+
+**Note**: A pain-management template was part of this skill upstream but is **not bundled here**, and it cannot be obtained from this repository. For a chronic-pain plan, start from `one_page_treatment_plan.tex` or supply your own LaTeX template.
 
 ### Template Structure
 
@@ -991,7 +992,7 @@ Treatment plans may be developed for clinical trials or research studies:
 
 **Scenario**: 45-year-old with chronic non-specific low back pain, pain 7/10
 
-**Template**: `pain_management_plan.tex`
+**Template**: none bundled -- the upstream `pain_management_plan.tex` is not shipped here; build this one from `one_page_treatment_plan.tex`
 
 **Goals**:
 - Short-term: Reduce pain to 4/10 in 6 weeks

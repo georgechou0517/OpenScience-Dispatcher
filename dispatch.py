@@ -481,12 +481,12 @@ def write_mcp(server_name, cfg, path):
 
 
 # --------------------------------------------------------------- on demand
-# The submission build ships without `skills/`: 1616 files / ~20 MB is over skillhub's
-# 200-file and 10 MB upload caps, and clawhub is a forum upload with the same shape of
-# limit. What ships instead is `manifest.json` — the file list and byte size of every
-# bundled sub-skill, plus where to fetch it. `plan` answers "how big is this, and do I
-# already have it" entirely offline; `fetch` is the only command that writes to disk,
-# and it writes nothing at all until it is asked with --yes.
+# The submission build ships without `skills/`: over a thousand files and ~20 MB, far past
+# the upload cap of the hosts that accept this package. What ships instead is
+# `manifest.json` -- the file list and byte size of every bundled sub-skill, plus where to
+# fetch it. `plan` answers "how big is this, and do I already have it" entirely offline;
+# `fetch` is the only command that writes to disk, and it writes nothing at all until it
+# is asked with --yes.
 MANIFEST = ROOT / "manifest.json"
 DEFAULT_SOURCE_HOME = "https://gitee.com/georgechou17/open-science-dispatcher"
 DEFAULT_SOURCE_REF = "main"
